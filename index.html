@@ -1,0 +1,2932 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="color-scheme" content="dark">
+<title>淮海战役 · 亲历战场</title>
+<style>
+:root{
+  --ink:#221a11;
+  --paper:#f2e7cd;
+  --paper2:#e2d3b0;
+  --gold:#c8a656;
+  --red:#b8332a;
+  --red2:#e0574a;
+  --blue:#2f6390;
+  --blue2:#5a95c4;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#0b0805;
+  font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",system-ui,sans-serif;
+  color:#e9dcc0;user-select:none}
+canvas#stage{position:fixed;inset:0;display:block;cursor:grab;touch-action:none}
+canvas#stage.drag{cursor:grabbing}
+#vignette{position:fixed;inset:0;pointer-events:none;z-index:2;
+  background:radial-gradient(120% 95% at 50% 42%,rgba(0,0,0,0) 38%,rgba(3,2,1,.62) 100%)}
+
+/* ---------- brand ---------- */
+#brand{position:fixed;left:24px;top:22px;z-index:12;display:flex;align-items:center;gap:13px;pointer-events:none}
+.seal{width:46px;height:46px;border-radius:9px;display:grid;place-items:center;
+  font:700 27px/1 "Songti SC","SimSun",serif;color:#fbeed3;
+  background:linear-gradient(155deg,#c8402f,#8c1f14);
+  box-shadow:0 6px 18px rgba(150,35,25,.45),inset 0 0 0 2px rgba(255,238,205,.22);
+  transform:rotate(-4.5deg)}
+#brand h1{margin:0;font:700 23px/1.1 "Songti SC","SimSun",serif;letter-spacing:.16em;
+  text-shadow:0 2px 12px rgba(0,0,0,.7)}
+#brand p{margin:4px 0 0;font-size:10.5px;letter-spacing:.24em;color:#a3916d}
+
+/* ---------- layers ---------- */
+#layers{position:fixed;right:22px;top:22px;z-index:12;display:flex;flex-direction:column;
+  gap:7px;align-items:stretch;width:190px}
+.layers-title{font:600 10.5px/1 "Songti SC",serif;letter-spacing:.3em;color:#a3916d;
+  text-align:right;margin-bottom:2px}
+.layer{position:relative;display:flex;align-items:center;gap:9px;padding:8px 11px;
+  border:1px solid rgba(200,166,86,.26);border-radius:9px;background:rgba(20,15,10,.66);
+  color:#cdbc98;cursor:pointer;text-align:left;font:inherit;font-size:12px;
+  backdrop-filter:blur(8px);transition:.22s;overflow:hidden}
+.layer b{font:700 15px/1 "Songti SC","SimSun",serif;color:#8a7754;transition:.22s}
+.layer i{font-style:normal;font-size:10px;color:#7d6c4e;margin-left:auto;letter-spacing:.06em}
+.layer span{letter-spacing:.04em}
+.layer:hover{border-color:rgba(200,166,86,.5);color:#e8d8b4}
+.layer.on{background:linear-gradient(100deg,rgba(184,51,42,.9),rgba(120,32,26,.78));
+  border-color:rgba(232,120,100,.55);color:#fdf1da;box-shadow:0 6px 20px rgba(150,35,25,.35)}
+.layer.on b{color:#ffdcc4}
+.layer.on i{color:#f0c3ae}
+.layer.locked{opacity:.42}
+.layer.locked b{color:#6d5c3f}
+.layers-foot{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.ghost{padding:7px 10px;border:1px solid rgba(200,166,86,.22);border-radius:8px;
+  background:rgba(20,15,10,.5);color:#c3b18b;font:inherit;font-size:11.5px;cursor:pointer;
+  letter-spacing:.05em;transition:.2s;backdrop-filter:blur(8px)}
+.ghost:hover{border-color:rgba(200,166,86,.55);color:#f0e2c2}
+.ghost:disabled{opacity:.34;cursor:default}
+
+/* ---------- bottom-left stack ---------- */
+#blstack{position:fixed;left:24px;bottom:150px;z-index:11;display:flex;flex-direction:column;
+  gap:8px;align-items:flex-start;pointer-events:none}
+#legend{display:flex;flex-wrap:wrap;gap:12px;font-size:10.5px;color:#9c8b6a;letter-spacing:.05em;
+  background:rgba(14,10,7,.55);border:1px solid rgba(200,166,86,.14);border-radius:8px;
+  padding:7px 11px;backdrop-filter:blur(6px)}
+#legend span{display:flex;align-items:center;gap:5px}
+#legend i{width:8px;height:8px;border-radius:50%;display:block}
+i.pla{background:#d9453a}i.kmt{background:#4d84b5}
+i.ring{background:transparent;border:1.5px dashed #d9453a;width:9px;height:9px}
+i.arr{background:linear-gradient(90deg,#d9453a,#f0a08e);border-radius:2px;width:12px;height:3px}
+#storybar{display:flex;align-items:center;gap:9px;pointer-events:auto}
+#story-count{font-size:10.5px;letter-spacing:.08em;color:#a89673;
+  background:rgba(14,10,7,.55);border:1px solid rgba(200,166,86,.14);border-radius:8px;
+  padding:6px 10px;backdrop-filter:blur(6px)}
+
+/* ---------- timeline ---------- */
+#timeline{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:14;
+  width:min(780px,calc(100vw - 36px));padding:11px 15px 12px;border-radius:13px;
+  background:rgba(16,12,8,.84);border:1px solid rgba(200,166,86,.26);
+  box-shadow:0 18px 40px rgba(0,0,0,.5);backdrop-filter:blur(12px)}
+.tl-top{display:flex;align-items:center;gap:13px}
+.play{width:34px;height:34px;flex:0 0 auto;border-radius:50%;border:1px solid rgba(200,166,86,.45);
+  background:radial-gradient(circle at 35% 30%,#c8402f,#8c1f14);color:#ffeadd;font-size:12px;
+  cursor:pointer;display:grid;place-items:center;padding-left:2px;transition:.2s}
+.play:hover{box-shadow:0 0 0 3px rgba(200,60,45,.22)}
+.play.on{background:radial-gradient(circle at 35% 30%,#8f7a52,#5b4a2c);padding-left:0}
+.tl-date b{display:block;font:700 17px/1 "DIN Alternate","Bahnschrift",monospace;
+  letter-spacing:.1em;color:#f4e7ca}
+.tl-date span{display:block;margin-top:4px;font-size:10px;letter-spacing:.1em;color:#9a8867}
+.tl-stage{margin-left:auto;text-align:right}
+.tl-stage span{font:600 12px/1.2 "Songti SC",serif;letter-spacing:.08em;color:#cdb689}
+.tl-speed{display:flex;gap:3px;margin-left:8px}
+.tl-speed button{border:1px solid rgba(200,166,86,.2);background:transparent;color:#8f7d5d;
+  font:inherit;font-size:10px;padding:3px 6px;border-radius:5px;cursor:pointer}
+.tl-speed button.on{color:#1b1309;background:#c8a656;border-color:#c8a656}
+.tl-track{position:relative;margin-top:11px;height:20px;display:flex;align-items:center}
+#scrub{-webkit-appearance:none;appearance:none;width:100%;height:20px;background:transparent;
+  cursor:pointer;position:relative;z-index:2}
+#scrub::-webkit-slider-runnable-track{height:3px;border-radius:2px;
+  background:linear-gradient(90deg,rgba(200,166,86,.55),rgba(200,166,86,.16))}
+#scrub::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;
+  margin-top:-5px;background:#f3e4c2;border:2px solid #b8332a;
+  box-shadow:0 0 0 3px rgba(184,51,42,.25),0 2px 6px rgba(0,0,0,.5)}
+#scrub::-moz-range-track{height:3px;border-radius:2px;background:rgba(200,166,86,.35)}
+#scrub::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#f3e4c2;
+  border:2px solid #b8332a}
+#tl-marks{position:absolute;left:0;right:0;top:14px;height:16px;pointer-events:none}
+#tl-marks i{position:absolute;top:0;width:1px;height:4px;background:rgba(200,166,86,.34)}
+#tl-marks b{position:absolute;top:5px;transform:translateX(-50%);font:400 9px/1 "Songti SC",serif;
+  color:#8d7c5c;letter-spacing:.05em;white-space:nowrap}
+.tl-marks2{display:flex;justify-content:space-between;margin-top:14px}
+.tl-marks2 button{flex:1;border:0;background:transparent;color:#7f6e50;font:inherit;font-size:10px;
+  letter-spacing:.06em;cursor:pointer;padding:3px 0;border-top:1px solid rgba(200,166,86,.14);
+  transition:.2s}
+.tl-marks2 button.on{color:#e8cf9d;border-top-color:#b8332a}
+.tl-marks2 button:hover{color:#dcc79b}
+
+/* ---------- narration ---------- */
+#narration{position:fixed;left:50%;bottom:152px;transform:translateX(-50%);z-index:10;
+  width:min(620px,calc(100vw - 60px));text-align:center;pointer-events:none;
+  opacity:0;transition:opacity .45s}
+#narration.on{opacity:1}
+#narr-text{display:inline-block;padding:8px 18px;border-radius:20px;
+  background:rgba(12,9,6,.72);border:1px solid rgba(200,166,86,.2);
+  font:400 13px/1.6 "Songti SC","SimSun",serif;letter-spacing:.05em;color:#e9dcc0;
+  backdrop-filter:blur(6px);text-shadow:0 1px 3px #000}
+#narr-text em{font-style:normal;color:#e08a70;margin-right:8px;font-family:"DIN Alternate",monospace;
+  letter-spacing:.06em}
+
+/* ---------- hint ---------- */
+#hint{position:fixed;left:50%;top:22px;transform:translateX(-50%);z-index:9;
+  font-size:10.5px;letter-spacing:.14em;color:#7d6d51;pointer-events:none;
+  transition:opacity .6s;white-space:nowrap}
+#hint.off{opacity:0}
+
+/* ---------- panels ---------- */
+.panel{position:fixed;top:0;bottom:0;width:344px;max-width:88vw;z-index:20;overflow:auto;
+  padding:26px 22px 40px;color:var(--ink);
+  background:linear-gradient(178deg,#f6ecd6,#e9dbba 55%,#ddcda6);
+  box-shadow:0 0 60px rgba(0,0,0,.6);transition:transform .34s cubic-bezier(.2,.85,.2,1)}
+.panel::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background:repeating-linear-gradient(0deg,rgba(120,95,55,.045) 0 1px,transparent 1px 4px)}
+.panel.right{right:0;transform:translateX(103%);border-left:2px solid #b59a63}
+.panel.left{left:0;transform:translateX(-103%);border-right:2px solid #b59a63}
+.panel.right.open{transform:translateX(0)}
+.panel.left.open{transform:translateX(0)}
+.panel::-webkit-scrollbar{width:6px}
+.panel::-webkit-scrollbar-thumb{background:rgba(120,95,55,.35);border-radius:3px}
+.close{position:absolute;right:14px;top:14px;width:28px;height:28px;border-radius:50%;
+  border:1px solid rgba(90,70,40,.3);background:transparent;color:#6d5836;cursor:pointer;
+  font-size:12px;line-height:1;transition:.2s}
+.close:hover{background:rgba(90,70,40,.1)}
+.kicker{font:600 10px/1 "Songti SC",serif;letter-spacing:.3em;color:#9a7f4e;margin-bottom:9px}
+.panel h2{margin:0 0 12px;font:700 25px/1.25 "Songti SC","SimSun",serif;letter-spacing:.04em;color:#2a1d10}
+.tagrow{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.tag{font-size:10.5px;letter-spacing:.08em;padding:4px 9px;border-radius:20px;
+  border:1px solid rgba(90,70,40,.28);color:#6d5836;background:rgba(255,255,255,.28)}
+.tag.red{border-color:rgba(184,51,42,.5);color:#8f2219;background:rgba(184,51,42,.1)}
+.tag.blue{border-color:rgba(47,99,144,.5);color:#28557c;background:rgba(47,99,144,.1)}
+.tag.gold{border-color:rgba(160,125,50,.55);color:#7a6023;background:rgba(200,166,86,.16)}
+.rows{margin:0;display:grid;grid-template-columns:76px 1fr;gap:10px 12px;font-size:12.5px}
+.rows dt{color:#96794a;letter-spacing:.08em;font-size:11px;padding-top:2px}
+.rows dd{margin:0;line-height:1.6;color:#2f2416}
+.rows dd b{color:#8f2219;font-weight:600}
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(120,95,55,.35),transparent);
+  margin:18px 0}
+.body{font:400 13.5px/1.95 "Songti SC","SimSun",serif;color:#33271a;margin:0 0 16px;
+  text-align:justify;letter-spacing:.02em}
+.body em{font-style:normal;color:#8f2219}
+.src{font-size:10.5px;line-height:1.7;color:#8b7550;border-top:1px dashed rgba(120,95,55,.4);
+  padding-top:10px;margin:0}
+.note{font-size:11px;line-height:1.8;color:#7d6740;margin:14px 0 0;
+  border-left:2px solid rgba(160,125,50,.5);padding-left:10px}
+
+/* ---------- modal ---------- */
+#modal{position:fixed;inset:0;z-index:40;display:none;place-items:center;padding:28px;
+  background:rgba(5,3,1,.72);backdrop-filter:blur(6px)}
+#modal.on{display:grid}
+.modal-card{position:relative;width:min(720px,100%);max-height:86vh;overflow:auto;
+  padding:26px 28px 30px;border-radius:14px;color:var(--ink);
+  background:linear-gradient(178deg,#f7eed9,#e5d6b4);border:1px solid #b59a63;
+  box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.modal-card h2{margin:0 0 6px;font:700 21px/1.3 "Songti SC","SimSun",serif;color:#2a1d10}
+.modal-card h3{margin:20px 0 8px;font:600 13px/1.4 "Songti SC",serif;color:#7a6023;letter-spacing:.1em}
+.modal-card p{font-size:12.5px;line-height:1.9;color:#43331f;margin:0 0 8px}
+table.tbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px}
+table.tbl th,table.tbl td{text-align:left;padding:6px 8px;border-bottom:1px solid rgba(120,95,55,.22);
+  vertical-align:top;line-height:1.6}
+table.tbl th{color:#8b6f3d;font-weight:600;font-size:11px;letter-spacing:.08em;white-space:nowrap}
+table.tbl td.n{font-family:"DIN Alternate","Bahnschrift",monospace;color:#8f2219;font-weight:700;
+  white-space:nowrap;letter-spacing:.02em}
+.slist{display:flex;flex-direction:column;gap:7px;margin-top:6px}
+.slist button{display:flex;gap:10px;align-items:baseline;text-align:left;padding:9px 12px;
+  border:1px solid rgba(120,95,55,.25);border-radius:8px;background:rgba(255,255,255,.3);
+  color:#3a2c19;font:inherit;font-size:12.5px;cursor:pointer;transition:.18s}
+.slist button:hover{background:rgba(200,166,86,.25);border-color:rgba(120,95,55,.5)}
+.slist button.und{opacity:.45;cursor:default}
+.slist b{font:700 11px/1 "DIN Alternate",monospace;color:#8f2219}
+
+/* 情报卡/故事卡展开时，HUD 让位 */
+body.card-right #timeline,body.card-left #timeline{width:min(700px,calc(100vw - 400px))}
+body.card-right #timeline{left:calc(50% - 172px)}
+body.card-left #timeline{left:calc(50% + 172px)}
+body.card-right #narration,body.card-left #narration{width:min(560px,calc(100vw - 440px));bottom:196px}
+body.card-right #narration{left:calc(50% - 172px)}
+body.card-left #narration{left:calc(50% + 172px)}
+body.card-right #layers{right:366px}
+body.card-left #blstack{left:366px}
+body.card-right #legend,body.card-left #legend{opacity:0}
+body.card-right #blstack,body.card-left #blstack{bottom:150px}
+body.card-right #hint,body.card-left #hint{opacity:0}
+body.card-open #hint{opacity:0}
+.panel{transition:transform .34s cubic-bezier(.2,.85,.2,1)}
+#layers,#timeline,#narration{transition:right .34s cubic-bezier(.2,.85,.2,1),left .34s cubic-bezier(.2,.85,.2,1),width .34s cubic-bezier(.2,.85,.2,1)}
+
+body.nofx .panel,body.nofx #timeline,body.nofx #layers,body.nofx .ghost,body.nofx #narr-text,body.nofx #legend,body.nofx #modal{backdrop-filter:none!important}
+
+@media(max-width:820px){
+  #brand h1{font-size:18px}#brand p{display:none}
+  #layers{width:150px;font-size:11px}
+  .panel{width:88vw}
+  #blstack{bottom:150px;left:14px}
+  #legend{font-size:9.5px;gap:8px}
+  #hint{display:none}
+}
+/* ============================================================
+   亲历战场 · 沉浸层
+   ============================================================ */
+
+/* ---- 序幕 ---- */
+#prologue{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:32px;background:#070604;text-align:center;
+  transition:opacity 1.15s ease,visibility 1.15s ease}
+#prologue.off{opacity:0;visibility:hidden}
+#prologue .pg-kicker{font:500 10.5px/1 "Songti SC",serif;letter-spacing:.42em;color:#8d7a56;
+  margin-bottom:26px;text-indent:.42em}
+#prologue .pg-year{font:700 clamp(30px,6.2vw,72px)/1 "Bodoni 72","Didot","Songti SC",serif;
+  letter-spacing:.1em;color:#f0dcb0;
+  text-shadow:0 0 70px rgba(214,150,74,.30),0 2px 24px rgba(0,0,0,.9)}
+#prologue .pg-rule{width:min(560px,76vw);height:1px;margin:26px 0 20px;
+  background:linear-gradient(90deg,transparent,rgba(214,172,96,.75),transparent)}
+#prologue .pg-sub{font:400 13.5px/1.9 "Songti SC","SimSun",serif;letter-spacing:.18em;color:#bfa87c}
+#prologue .pg-sub2{font:400 11.5px/1.9 "Songti SC",serif;letter-spacing:.2em;color:#7d6c4e;margin-top:3px}
+#pg-enter{margin-top:32px;padding:12px 30px;border:1px solid rgba(214,172,96,.5);border-radius:2px;
+  background:linear-gradient(160deg,rgba(184,51,42,.92),rgba(112,26,20,.94));
+  color:#ffe9cf;font:600 13px/1 "Songti SC",serif;letter-spacing:.34em;text-indent:.34em;cursor:pointer;
+  box-shadow:0 10px 34px rgba(150,35,25,.35),inset 0 0 0 1px rgba(255,228,190,.16);transition:.25s}
+#pg-enter:hover{transform:translateY(-1px);box-shadow:0 14px 42px rgba(170,45,32,.5)}
+#prologue .pg-hint{margin-top:20px;font-size:10.5px;line-height:2;letter-spacing:.13em;color:#6d5c3f}
+
+/* ---- 电影黑边 ---- */
+#lb{position:fixed;inset:0;z-index:9;pointer-events:none;opacity:0;transition:opacity .7s}
+#lb .bar{position:absolute;left:0;right:0;height:0;background:#050403;
+  transition:height .7s cubic-bezier(.3,.8,.3,1)}
+#lb .top{top:0}#lb .bot{bottom:0}
+body.cinema #lb{opacity:1}
+body.cinema #lb .bar{height:7.6vh}
+
+/* ---- 胶片颗粒 ---- */
+#grain{position:fixed;inset:-40px;z-index:6;pointer-events:none;opacity:.14;
+  mix-blend-mode:overlay;background-repeat:repeat;animation:grainMove .9s steps(3) infinite}
+@keyframes grainMove{
+  0%{transform:translate3d(0,0,0)}
+  33%{transform:translate3d(-14px,9px,0)}
+  66%{transform:translate3d(11px,-13px,0)}
+  100%{transform:translate3d(0,0,0)}
+}
+
+/* ---- 章节大字幕 ---- */
+#chapter{position:fixed;left:0;right:0;top:36%;z-index:31;display:flex;flex-direction:column;
+  align-items:center;gap:9px;pointer-events:none;opacity:0;transform:translateY(12px);
+  transition:opacity 1s ease,transform 1.3s cubic-bezier(.2,.8,.2,1);text-align:center}
+#chapter.on{opacity:1;transform:translateY(0)}
+#chapter .ch-num{font:500 11px/1 "Songti SC",serif;letter-spacing:.5em;color:#c8a656;text-indent:.5em}
+#chapter .ch-name{font:700 clamp(28px,4.6vw,46px)/1.12 "Songti SC","SimSun",serif;
+  letter-spacing:.3em;text-indent:.3em;color:#f3e3c2;
+  text-shadow:0 4px 30px rgba(0,0,0,.85),0 0 60px rgba(220,170,90,.18)}
+#chapter .ch-rule{width:118px;height:1px;margin:4px 0 2px;
+  background:linear-gradient(90deg,transparent,rgba(200,166,86,.7),transparent)}
+#chapter .ch-date{font:400 10.5px/1 "DIN Alternate","Bahnschrift",monospace;letter-spacing:.26em;color:#a8946e}
+
+/* ---- 终局纪念碑 ---- */
+#memorial{position:fixed;inset:0;z-index:66;display:grid;place-items:center;padding:30px;
+  background:radial-gradient(78% 68% at 50% 44%,rgba(10,8,6,.74),rgba(4,3,2,.985) 72%);
+  opacity:0;visibility:hidden;transition:opacity 1.8s ease,visibility 1.8s;backdrop-filter:blur(3px)}
+#memorial.on{opacity:1;visibility:visible}
+#memorial .mm{text-align:center;transform:translateY(16px);transition:transform 2.4s ease}
+#memorial.on .mm{transform:translateY(0)}
+#memorial .mm-date{font:400 10.5px/1 "DIN Alternate",monospace;letter-spacing:.34em;color:#8f7c58;
+  margin-bottom:20px}
+#memorial .mm-title{font:700 clamp(28px,4.2vw,44px)/1.25 "Songti SC","SimSun",serif;
+  letter-spacing:.26em;text-indent:.26em;color:#f2e2bf;text-shadow:0 0 60px rgba(222,172,92,.2)}
+#memorial .mm-rule{width:min(420px,70vw);height:1px;margin:28px auto;
+  background:linear-gradient(90deg,transparent,rgba(200,166,86,.55),transparent)}
+#memorial .mm-rows{display:flex;gap:min(60px,6.5vw);justify-content:center;flex-wrap:wrap}
+#memorial .mm-row{display:flex;flex-direction:column;gap:9px}
+#memorial .mm-row b{font:700 clamp(21px,2.9vw,31px)/1 "DIN Alternate","Bahnschrift",monospace;
+  color:#e9d3a4}
+#memorial .mm-row span{font:400 10px/1 "Songti SC",serif;letter-spacing:.22em;color:#8d7b58;text-indent:.22em}
+#memorial .mm-foot{font:400 12px/2 "Songti SC",serif;letter-spacing:.14em;color:#a4926e;margin-top:30px}
+#mm-close{margin-top:28px;padding:9px 22px;border:1px solid rgba(200,166,86,.4);border-radius:2px;
+  background:transparent;color:#c9b488;font:inherit;font-size:11.5px;letter-spacing:.22em;text-indent:.22em;
+  cursor:pointer;transition:.2s}
+#mm-close:hover{color:#f2e2bf;border-color:rgba(200,166,86,.8);background:rgba(200,166,86,.08)}
+
+/* ---- 右上工具行 ---- */
+.toolrow{display:flex;gap:6px;margin-top:2px}
+.toolrow .ghost{flex:1;font-size:10.5px;padding:6px 2px;letter-spacing:.04em}
+.ghost.on{color:#1b1309;background:#c8a656;border-color:#c8a656}
+
+/* ---- 沉浸模式 ---- */
+#brand,#layers,#blstack,#timeline,#hint{transition:opacity .55s ease}
+body.cinema #brand,body.cinema #layers,body.cinema #blstack,
+body.cinema #timeline,body.cinema #hint{opacity:0;pointer-events:none}
+body.cinema #narration{bottom:calc(7.6vh + 52px);width:min(760px,calc(100vw - 90px))}
+#cinexit{position:fixed;left:50%;bottom:calc(7.6vh + 14px);transform:translateX(-50%);z-index:32;
+  font-size:9.5px;letter-spacing:.24em;color:#786747;opacity:0;transition:opacity .9s;pointer-events:none}
+body.cinema #cinexit{opacity:1}
+
+/* ---- 打字机 ---- */
+#narr-text{border-radius:4px;border-left:2px solid rgba(184,51,42,.65);max-width:100%}
+#narr-text .nt{white-space:pre-wrap}
+#narr-text .caret{font-style:normal;font-weight:400;color:#e2b774;margin-left:2px;
+  animation:caretBlink 1.05s steps(1) infinite}
+@keyframes caretBlink{0%,49%{opacity:1}50%,100%{opacity:0}}
+
+/* ---- 图例补充 ---- */
+i.fire{width:9px;height:9px;border-radius:50%;
+  background:radial-gradient(circle,#ffd79a 30%,#c04a22);box-shadow:0 0 7px rgba(240,150,60,.65)}
+
+@media(max-width:820px){
+  #prologue .pg-year{letter-spacing:.04em}
+  #chapter .ch-name{letter-spacing:.18em;text-indent:.18em}
+  body.cinema #lb .bar{height:5vh}
+  body.cinema #narration{bottom:calc(5vh + 40px)}
+  #cinexit{bottom:calc(5vh + 10px)}
+}
+</style>
+</head>
+
+<body>
+<canvas id="stage"></canvas>
+<div id="vignette"></div>
+<div id="grain"></div>
+<div id="lb"><div class="bar top"></div><div class="bar bot"></div></div>
+
+<div id="prologue">
+  <div class="pg-kicker">中 原 · 一 九 四 八 年 冬</div>
+  <div class="pg-year">1948.11.6</div>
+  <div class="pg-rule"></div>
+  <div class="pg-sub">六十万 对 八十万 · 六十 六 天</div>
+  <div class="pg-sub2">徐州 以东 · 碾庄圩 / 双堆集 / 陈官庄</div>
+  <button id="pg-enter">进 入 战 场</button>
+  <div class="pg-hint">拖拽 旋转 · 滚轮 俯冲 · 双击 贴地 · H 沉浸 · M 静音</div>
+</div>
+
+<div id="chapter">
+  <div class="ch-num"></div>
+  <div class="ch-name"></div>
+  <div class="ch-rule"></div>
+  <div class="ch-date"></div>
+</div>
+
+<div id="memorial">
+  <div class="mm">
+    <div class="mm-date">1949.1.10 · 陈官庄</div>
+    <div class="mm-title">淮 海 战 役 结 束</div>
+    <div class="mm-rule"></div>
+    <div class="mm-rows">
+      <div class="mm-row"><b>555,099</b><span>歼 敌</span></div>
+      <div class="mm-row"><b>134,000</b><span>我军 伤亡</span></div>
+      <div class="mm-row"><b>5,430,000</b><span>支前 民工</span></div>
+      <div class="mm-row"><b>66</b><span>天</span></div>
+    </div>
+    <div class="mm-foot">战事 止于 此。<br>而 那个 冬天 的 每一 个 村庄，都 记 得。</div>
+    <button id="mm-close">继 续 浏 览 战 场</button>
+  </div>
+</div>
+
+<header id="brand">
+  <div class="seal">淮</div>
+  <div><h1>淮海战役</h1><p>亲 历 战 场 · 1948.11.6 — 1949.1.10</p></div>
+</header>
+
+<div id="hint">拖拽 旋转 · 滚轮 俯冲 · 单击 番号 读档 · 双击 贴地 · H 沉浸 · M 静音 · 推近后 浮出 战场故事</div>
+
+<nav id="layers">
+  <div class="layers-title">四 层 态 势</div>
+  <button class="layer on" data-layer="1"><b>壹</b><span>战略态势</span><i>11.6</i></button>
+  <button class="layer locked" data-layer="2"><b>贰</b><span>碾庄圩 · 黄百韬</span><i>11.22</i></button>
+  <button class="layer locked" data-layer="3"><b>叁</b><span>双堆集 · 黄维</span><i>12.15</i></button>
+  <button class="layer locked" data-layer="4"><b>肆</b><span>陈官庄 · 杜聿明</span><i>1.10</i></button>
+  <div class="layers-foot">
+    <button class="ghost" id="btn-next">揭开下一层 ▸</button>
+    <button class="ghost" id="btn-src">史料与数据核对</button>
+    <div class="toolrow">
+      <button class="ghost" id="btn-sound" title="音场 开 / 关">♪ 音场</button>
+      <button class="ghost" id="btn-cinema" title="沉浸模式 开 / 关">◲ 沉浸</button>
+    </div>
+  </div>
+</nav>
+
+<div id="blstack">
+  <div id="legend">
+    <span><i class="pla"></i>人民解放军</span>
+    <span><i class="kmt"></i>国民党军</span>
+    <span><i class="ring"></i>合围圈</span>
+    <span><i class="fire"></i>炮火覆盖</span>
+    <span><i class="arr"></i>进攻方向</span>
+  </div>
+  <div id="storybar">
+    <span id="story-count">已发现 0 / 11 段战场故事</span>
+    <button class="ghost" id="btn-stories" style="padding:4px 9px;font-size:10.5px">故事索引</button>
+  </div>
+</div>
+
+<div id="cinexit">按 H 退出沉浸 · 拖动时间轴 继续推演</div>
+<div id="narration"><div id="narr-text"></div></div>
+
+<footer id="timeline">
+  <div class="tl-top">
+    <button class="play" id="btn-play" title="播放 / 暂停">▶</button>
+    <div class="tl-date">
+      <b id="date-main">1948.11.06</b>
+      <span id="date-sub">第 1 天 · 战役发起</span>
+    </div>
+    <div class="tl-stage"><span id="stage-name">战略态势 · 十字路口</span></div>
+    <div class="tl-speed">
+      <button data-sp="0.5">0.5×</button><button data-sp="1" class="on">1×</button><button data-sp="2">2×</button>
+    </div>
+  </div>
+  <div class="tl-track">
+    <input id="scrub" type="range" min="0" max="65" step="0.02" value="0">
+    <div id="tl-marks"></div>
+  </div>
+  <div class="tl-marks2" id="tl-stagejump"></div>
+</footer>
+
+<aside class="panel right" id="unit-card">
+  <button class="close" data-close="unit-card">✕</button>
+  <div class="kicker" id="u-kicker">兵团</div>
+  <h2 id="u-name">—</h2>
+  <div class="tagrow" id="u-tags"></div>
+  <dl class="rows" id="u-rows"></dl>
+  <p class="note" id="u-note"></p>
+</aside>
+
+<aside class="panel left" id="story-card">
+  <button class="close" data-close="story-card">✕</button>
+  <div class="kicker" id="s-kicker">战 场 故 事</div>
+  <h2 id="s-name">—</h2>
+  <div class="tagrow" id="s-tags"></div>
+  <p class="body" id="s-body"></p>
+  <p class="src" id="s-src"></p>
+</aside>
+
+<div id="modal">
+  <div class="modal-card">
+    <button class="close" id="modal-close">✕</button>
+    <h2 id="modal-title"></h2>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   淮海战役 · 回忆沙盘 —— 史料数据层
+   坐标：经纬度 -> 公里平面。1 世界单位 = 1 公里。
+   ============================================================ */
+var GEO = { lng0: 117.2, lat0: 34.0, kx: 92, kz: 111 };
+function gx(lng) { return (lng - GEO.lng0) * GEO.kx; }
+function gz(lat) { return (GEO.lat0 - lat) * GEO.kz; }
+
+var CAMPAIGN = {
+  start: [1948, 11, 6],
+  end: [1949, 1, 10],
+  days: 66,
+  wiped: 555099,
+  wipedText: '555,099'
+};
+
+/* ---------------- 地名 ---------------- */
+var PLACES = [
+  { n: '徐州',   lng: 117.19, lat: 34.26, t: 'city' },
+  { n: '碾庄圩', lng: 117.87, lat: 34.33, t: 'town', hot: 1 },
+  { n: '双堆集', lng: 116.85, lat: 33.62, t: 'town', hot: 1 },
+  { n: '陈官庄', lng: 116.55, lat: 34.00, t: 'town', hot: 1 },
+  { n: '宿县',   lng: 116.98, lat: 33.63, t: 'city' },
+  { n: '贾汪',   lng: 117.42, lat: 34.44, t: 'town' },
+  { n: '蚌埠',   lng: 117.36, lat: 32.92, t: 'city' },
+  { n: '新安镇', lng: 118.35, lat: 34.37, t: 'town' },
+  { n: '蒙城',   lng: 116.56, lat: 33.26, t: 'town' },
+  { n: '曹八集', lng: 117.55, lat: 34.32, t: 'town' },
+  { n: '大王庄', lng: 116.95, lat: 33.68, t: 'zone' },
+  { n: '固镇',   lng: 117.32, lat: 33.32, t: 'town' },
+  { n: '永城',   lng: 116.45, lat: 33.93, t: 'town' },
+  { n: '商丘',   lng: 115.65, lat: 34.42, t: 'city' },
+  { n: '临涣集', lng: 116.60, lat: 33.55, t: 'town' }
+];
+
+/* ---------------- 水系 ---------------- */
+var RIVERS = [
+  { n: '京杭运河', pts: [[117.62, 34.72], [117.74, 34.52], [117.90, 34.31], [118.10, 34.06], [118.26, 33.86], [118.30, 33.60]] },
+  { n: '沂河',     pts: [[118.06, 35.00], [118.30, 34.66], [118.34, 34.40], [118.20, 34.14]] },
+  { n: '涡河',     pts: [[116.10, 34.16], [116.38, 33.80], [116.52, 33.42], [116.66, 33.06]] },
+  { n: '浍河',     pts: [[116.52, 33.86], [116.78, 33.70], [117.05, 33.56], [117.26, 33.44]] }
+];
+
+/* ---------------- 铁路与公路 ---------------- */
+var RAILS = [
+  { n: '津浦铁路', pts: [[117.19, 34.26], [117.05, 34.00], [116.98, 33.63], [117.16, 33.28], [117.36, 32.92]] },
+  { n: '陇海铁路', pts: [[115.65, 34.42], [116.40, 34.36], [117.19, 34.26], [117.80, 34.32], [118.35, 34.37]] }
+];
+var ROADS = [
+  { pts: [[117.87, 34.33], [117.55, 34.32], [117.19, 34.26]] },
+  { pts: [[117.19, 34.26], [116.85, 34.06], [116.55, 34.00], [116.45, 33.93]] },
+  { pts: [[116.98, 33.63], [116.85, 33.62], [116.60, 33.55]] },
+  { pts: [[116.56, 33.26], [116.85, 33.62]] },
+  { pts: [[117.36, 32.92], [117.32, 33.32], [117.10, 33.55]] }
+];
+
+/* ---------------- 合围圈 ---------------- */
+var RINGS = [
+  { id: 'nianzhuang', n: '碾庄圩', lng: 117.87, lat: 34.33, from: 4.0, to: 16.2, r0: 17, r1: 2.4, side: 'kmt' },
+  { id: 'shuangduiji', n: '双堆集', lng: 116.85, lat: 33.62, from: 19.0, to: 39.2, r0: 16, r1: 2.6, side: 'kmt' },
+  { id: 'chenguanzhuang', n: '陈官庄', lng: 116.55, lat: 34.00, from: 42.0, to: 65.0, r0: 21, r1: 3.4, side: 'kmt' }
+];
+
+/* ---------------- 炮火与激战区 ---------------- */
+var BARRAGE = [
+  { lng: 117.87, lat: 34.33, from: 9, to: 16, r: 6, rate: 1.0 },
+  { lng: 116.85, lat: 33.62, from: 26, to: 39, r: 7, rate: 1.1 },
+  { lng: 116.55, lat: 34.00, from: 58, to: 65, r: 8, rate: 1.3 }
+];
+
+/* ---------------- 24 支部队 ---------------- */
+var UNITS = [
+  /* ===== 人民解放军 ===== */
+  { id: 'hy-hq', name: '华东野战军 司令部', side: 'pla', kind: '野战军', layer: 1,
+    cmd: '粟裕（代司令员兼代政委）', str: '全军 约 36 万人', num: '16 个 纵队',
+    p: [[0, 117.95, 34.66], [8, 117.72, 34.46], [18, 117.42, 34.24], [30, 117.00, 34.06], [44, 116.72, 34.02], [65, 116.62, 33.99]],
+    s: [[0, '自临沂、滕县 一线 分路 南下'], [18, '指挥 碾庄 围歼 与 徐东 阻击'], [44, '指挥 陈官庄 围困 与 总攻'], [65, '战役 结束，全军 转移 休整']],
+    end: '战役 结束时 华野 已 直抵 长江 北岸',
+    note: '9月24日 济南 战役 尚未 结束，粟裕 即 向 中央军委 建议 举行 淮海战役。战役 由 最初的 "小淮海"（歼灭 两淮、海州 一带 之敌）逐步 扩大 为 南线 战略 决战。' },
+
+  { id: 'hy-1', name: '华野 第1纵队', side: 'pla', kind: '纵队', layer: 2,
+    cmd: '叶飞', str: '约 2.5 万人', num: '第1、2、3师',
+    p: [[0, 118.16, 34.18], [6, 118.04, 34.28], [16, 118.02, 34.30], [34, 117.30, 34.14], [46, 116.80, 34.05], [65, 116.70, 34.02]],
+    s: [[0, '自 窑湾 方向 追歼 第63军'], [6, '参加 碾庄圩 外围 作战'], [34, '转兵 追击 杜聿明 集团'], [65, '参加 陈官庄 总攻']],
+    end: '战役 结束 时 位于 陈官庄 东南',
+    note: '1纵 在 窑湾 地区 全歼 第7兵团 第63军，是 淮海战役 中 第一个 完整 歼灭 国民党军 一个军 的战例。' },
+
+  { id: 'hy-4', name: '华野 第4纵队', side: 'pla', kind: '纵队', layer: 2,
+    cmd: '陶勇', str: '约 2.3 万人', num: '第10、11、12师',
+    p: [[0, 117.62, 34.52], [7, 117.95, 34.22], [16, 117.94, 34.23], [38, 117.10, 34.10], [50, 116.62, 34.02], [65, 116.56, 33.99]],
+    s: [[0, '自 邳县 以北 南下'], [7, '参加 碾庄圩 围歼 作战'], [38, '北上 参加 陈官庄 包围'], [65, '参加 陈官庄 总攻']],
+    end: '战役 结束 时 位于 陈官庄 西南',
+    note: '4纵 是 碾庄圩 攻坚 的 主力 之一。碾庄圩 一带 村落 密集、水壕 环绕，国民党军 依托 集团 地堡 群 顽抗，我军 以 近迫 作业 逐村 争夺。' },
+
+  { id: 'hy-6', name: '华野 第6纵队', side: 'pla', kind: '纵队', layer: 2,
+    cmd: '王必成', str: '约 2.2 万人', num: '第16、17、18师',
+    p: [[0, 118.24, 34.30], [8, 118.02, 34.16], [20, 117.42, 33.94], [30, 117.20, 33.40], [40, 117.24, 33.30], [65, 117.30, 33.20]],
+    s: [[0, '自 新安镇 以南 出击'], [20, '南下 参加 南线 阻击'], [30, '于 固镇 以北 阻击 第6、第8兵团 北援'], [65, '监视 蚌埠 方向 之敌']],
+    end: '战役 结束 时 位于 固镇 以南',
+    note: '南线 阻击 集团 由 华野 数个 纵队 组成，任务 是 隔断 李延年、刘汝明 两兵团 与 黄维 兵团 的 联系，使 中原 野战军 得以 专心 围歼 第12兵团。' },
+
+  { id: 'hy-9', name: '华野 第9纵队', side: 'pla', kind: '纵队', layer: 2,
+    cmd: '聂凤智', str: '约 3.1 万人', num: '第25、26、27师',
+    p: [[0, 118.36, 34.42], [2, 118.24, 34.38], [8, 117.98, 34.43], [16, 117.93, 34.42], [40, 116.86, 34.08], [65, 116.60, 34.00]],
+    s: [[0, '自 新安镇 方向 追歼 第7兵团'], [2, '于 沂河 堰头 架设 "十人桥" 强渡'], [8, '参加 碾庄圩 围歼'], [65, '参加 陈官庄 总攻']],
+    end: '战役 结束 时 位于 陈官庄 以东',
+    note: '9纵 是 追击 黄百韬 兵团 的 先头 部队 之一。堰头 渡口 的 "十人桥"，是 这场 追击 战 中 最 著名 的 一幕。' },
+
+  { id: 'hy-10', name: '华野 第10纵队', side: 'pla', kind: '纵队', layer: 2,
+    cmd: '宋时轮', str: '约 2.0 万人', num: '第28、29、30师',
+    p: [[0, 117.42, 34.40], [7, 117.52, 34.32], [16, 117.54, 34.30], [34, 117.10, 34.12], [50, 116.60, 33.98], [65, 116.54, 33.96]],
+    s: [[0, '于 徐州 以东 构筑 阻击 阵地'], [7, '大许家 一线 阻击 邱清泉、李弥 东援'], [16, '转入 追击'], [65, '参加 陈官庄 总攻']],
+    end: '战役 结束 时 位于 陈官庄 以南',
+    note: '徐东 阻击 战 历时 十余 昼夜，第10纵队 等 部 在 大许家 一线 顶住 两个 兵团 的 轮番 冲击，使 黄百韬 兵团 始终 未能 与 徐州 打通。' },
+
+  { id: 'hy-13', name: '华野 第13纵队', side: 'pla', kind: '纵队', layer: 2,
+    cmd: '周志坚', str: '约 2.3 万人', num: '第37、38、39师',
+    p: [[0, 117.68, 34.46], [4, 117.58, 34.36], [12, 117.77, 34.27], [16, 117.79, 34.26], [40, 116.90, 34.06], [65, 116.64, 34.00]],
+    s: [[0, '自 台儿庄 方向 南下'], [4, '抢占 曹八集，切断 第7兵团 西退 之路'], [12, '参加 碾庄圩 围歼'], [65, '参加 陈官庄 总攻']],
+    end: '战役 结束 时 位于 陈官庄 东北',
+    note: '曹八集 是 黄百韬 兵团 西撤 徐州 的 咽喉。13纵 抢先 占领 曹八集，与 窑湾、碾庄 各 部 合力，完成 了 对 第7兵团 的 合围。' },
+
+  { id: 'hy-tb', name: '华野 特种兵纵队', side: 'pla', kind: '炮兵', layer: 2,
+    cmd: '陈锐霆', str: '火炮 数百门', num: '炮1、2、3团 等',
+    p: [[0, 117.86, 34.50], [10, 118.09, 34.37], [16, 118.07, 34.38], [44, 116.74, 34.04], [65, 116.60, 34.02]],
+    s: [[0, '随 主力 南下'], [10, '集中 炮火 支援 碾庄圩 攻坚'], [16, '转移 支援 双堆集 方向'], [65, '参加 陈官庄 总攻']],
+    end: '战役 结束 时 位于 陈官庄 西北',
+    note: '淮海战役 是 我军 首次 大规模 集中 使用 炮兵 的 战役 之一。碾庄圩 攻坚 中，特纵 的 抵近 射击 大幅 缩短 了 村落 争夺 的 时间。' },
+
+  { id: 'zy-hq', name: '中原野战军 司令部', side: 'pla', kind: '野战军', layer: 1,
+    cmd: '刘伯承 · 邓小平', str: '全军 约 15 万人', num: '7 个 纵队',
+    p: [[0, 115.82, 33.94], [8, 116.20, 33.80], [16, 116.62, 33.62], [30, 116.60, 33.56], [65, 116.58, 33.52]],
+    s: [[0, '自 平汉线 东进，向 宿县 方向 挺进'], [10, '指挥 攻克 宿县'], [30, '指挥 双堆集 围歼'], [65, '战役 结束，就地 休整']],
+    end: '战役 结束 时 位于 临涣集 一带',
+    note: '11月16日，中央军委 决定 由 刘伯承、陈毅、邓小平、粟裕、谭震林 组成 淮海战役 总前委，邓小平 为 书记，统一 指挥 前线 作战。' },
+
+  { id: 'zy-1', name: '中野 第1纵队', side: 'pla', kind: '纵队', layer: 3,
+    cmd: '杨勇', str: '约 2.0 万人', num: '第1、2、20旅',
+    p: [[0, 115.78, 33.60], [10, 116.30, 33.36], [19, 116.62, 33.52], [30, 116.78, 33.58], [40, 116.80, 33.60], [65, 116.80, 33.60]],
+    s: [[0, '自 平汉线 东进'], [19, '于 双堆集 以西 构成 包围'], [30, '参加 双堆集 围歼'], [40, '战斗 结束，清剿 残敌']],
+    end: '战役 结束 时 位于 双堆集 以西',
+    note: '双堆集 围歼 中，中原 野战军 以 7 个 纵队 的 劣势 兵力 包围 了 装备 精良 的 第12兵团，被 称为 "瘦狗 拉 硬屎"。' },
+
+  { id: 'zy-3', name: '中野 第3纵队', side: 'pla', kind: '纵队', layer: 3,
+    cmd: '陈锡联', str: '约 2.2 万人', num: '第7、8、9旅',
+    p: [[0, 115.92, 34.02], [8, 116.60, 33.80], [10, 116.98, 33.63], [18, 116.92, 33.60], [30, 116.88, 33.64], [40, 116.86, 33.62], [65, 116.86, 33.62]],
+    s: [[0, '沿 津浦线 北段 急进'], [10, '攻克 宿县，切断 徐蚌线'], [18, '北上 参加 双堆集 包围'], [65, '战役 结束，就地 休整']],
+    end: '战役 结束 时 位于 双堆集',
+    note: '宿县 地处 津浦铁路 徐蚌段 中点。攻克 宿县，等于 把 徐州 与 蚌埠 之间 的 大动脉 一刀 切断，徐州 由此 成为 孤点。' },
+
+  { id: 'zy-6', name: '中野 第6纵队', side: 'pla', kind: '纵队', layer: 3,
+    cmd: '王近山', str: '约 2.1 万人', num: '第16、17、18旅',
+    p: [[0, 116.06, 33.52], [10, 116.42, 33.44], [19, 116.96, 33.70], [33, 116.98, 33.70], [39, 116.90, 33.64], [65, 116.88, 33.62]],
+    s: [[0, '自 平汉线 东进'], [19, '于 双堆集 以东 构成 包围'], [33, '大王庄 血战'], [39, '参加 双堆集 总攻']],
+    end: '战役 结束 时 位于 双堆集 以东',
+    note: '大王庄 位于 双堆集 东北，是 第12兵团 防御 体系 的 要点。中野 6纵 与 国民党军 第18军 "老虎团" 在此 反复 争夺，村庄 数度 易手。' },
+
+  /* ===== 国民党军 ===== */
+  { id: 'km-xz', name: '徐州 "剿总" 总司令部', side: 'kmt', kind: '绥靖区', layer: 1,
+    cmd: '刘峙（总司令）', str: '辖区 约 80 万人', num: '5 个 兵团 又 3 个 绥靖区',
+    p: [[0, 117.19, 34.26], [24, 117.19, 34.26], [26, 117.36, 32.92], [65, 117.36, 32.92]],
+    s: [[0, '坐镇 徐州，指挥 陇海、津浦 两线 作战'], [24, '弃 徐州 西撤，总部 南移 蚌埠'], [65, '战役 结束，退守 淮河 以南']],
+    end: '总部 撤至 蚌埠，徐州 于 12月1日 解放',
+    note: '徐州 地处 津浦、陇海 两 铁路 交点，是 南京 门户。国民党军 在此 集结 重兵，却 因 指挥 犹豫、逐次 增援，被 各个 歼灭。' },
+
+  { id: 'km-7', name: '第7兵团', side: 'kmt', kind: '兵团', layer: 1,
+    cmd: '黄百韬', str: '约 10 万人', num: '第25、44、63、64、100军',
+    p: [[0, 118.32, 34.38], [3, 118.00, 34.36], [4.5, 117.90, 34.34], [16, 117.87, 34.33], [16.4, 117.87, 34.33]],
+    s: [[0, '于 新安镇 一带 待命 西撤'], [3, '沿 陇海线 西撤'], [4.5, '被 合围 于 碾庄圩'], [16, '兵团部 被 攻破，黄百韬 自杀']],
+    end: '11月22日 覆灭，兵团 司令官 黄百韬 自杀身亡',
+    note: '黄百韬 兵团 因 等待 海州 撤来 的 第44军，在 新安镇 耽搁 两天，失去 西撤 徐州 的 时机。碾庄圩 一围，10万 大军 成 瓮中之鳖。' },
+
+  { id: 'km-12', name: '第12兵团', side: 'kmt', kind: '兵团', layer: 1,
+    cmd: '黄维', str: '约 12 万人', num: '第10、14、18、85军 及 快速纵队',
+    p: [[0, 115.36, 32.96], [8, 115.90, 33.16], [18, 116.56, 33.26], [19, 116.62, 33.36], [21, 116.80, 33.56], [39, 116.85, 33.62], [39.4, 116.85, 33.62]],
+    s: [[0, '自 确山、驻马店 东进 增援 徐州'], [18, '抵 蒙城，强渡 涡河 北进'], [21, '被 合围 于 双堆集'], [39, '兵团 覆灭，黄维 被俘']],
+    end: '12月15日 覆灭，兵团 司令官 黄维 被俘',
+    note: '第12兵团 是 国民党军 的 精锐，辖 号称 "五大主力" 之一 的 第18军。蒋介石 令其 自 华中 急进 增援，结果 一头 扎进 了 中原 野战军 的 口袋。' },
+
+  { id: 'km-2', name: '第2兵团', side: 'kmt', kind: '兵团', layer: 1,
+    cmd: '邱清泉', str: '约 12 万人', num: '第5、70、74、12军',
+    p: [[0, 117.16, 34.38], [7, 117.44, 34.32], [16, 117.40, 34.28], [24, 117.10, 34.24], [28, 116.62, 34.04], [65, 116.58, 34.00], [65.4, 116.58, 34.00]],
+    s: [[0, '集结 于 徐州 以西'], [7, '东援 碾庄，被 阻 于 大许家'], [24, '随 杜聿明 弃 徐州 西撤'], [28, '被 合围 于 陈官庄'], [65, '兵团 覆灭，邱清泉 阵亡']],
+    end: '1949年1月10日 覆灭，兵团 司令官 邱清泉 阵亡',
+    note: '第2兵团 是 徐州 方面 的 机动 主力。东援 碾庄 时，十余 天 只 前进 了 十余 公里，被 阻击 部队 牢牢 钉在 大许家 一线。' },
+
+  { id: 'km-13', name: '第13兵团', side: 'kmt', kind: '兵团', layer: 1,
+    cmd: '李弥', str: '约 7 万人', num: '第8、9、115军',
+    p: [[0, 117.34, 34.28], [7, 117.48, 34.30], [24, 117.08, 34.20], [28, 116.58, 34.06], [65, 116.52, 34.02]],
+    s: [[0, '驻 徐州 以东'], [7, '协同 第2兵团 东援'], [28, '被 合围 于 陈官庄'], [65, '兵团 覆灭，李弥 只身 逃脱']],
+    end: '1949年1月10日 覆灭，司令官 李弥 化装 逃脱',
+    note: '陈官庄 包围圈 内 聚集 了 徐州 "剿总" 前进 指挥部 及 3 个 兵团，约 30 万人。包围圈 东西 不过 十余 公里，粮弹 全靠 空投。' },
+
+  { id: 'km-16', name: '第16兵团', side: 'kmt', kind: '兵团', layer: 1,
+    cmd: '孙元良', str: '约 4 万人', num: '第41、47、99军',
+    p: [[0, 117.14, 34.10], [24, 117.02, 34.16], [28, 116.66, 34.02], [30, 116.72, 33.98], [30.4, 116.72, 33.98]],
+    s: [[0, '驻 徐州 以南'], [24, '随 杜聿明 西撤'], [28, '被 合围 于 陈官庄 以西'], [30, '12月6日 自行 突围，全军 覆灭']],
+    end: '12月6日 突围 时 覆灭，司令官 孙元良 只身 逃脱',
+    note: '杜聿明 集团 被围 后，孙元良 主张 立即 突围。12月6日 夜，第16兵团 单独 突围，一夜之间 溃散，孙元良 化装 逃脱。' },
+
+  { id: 'km-6', name: '第6兵团', side: 'kmt', kind: '兵团', layer: 1,
+    cmd: '李延年', str: '约 6 万人', num: '第39、54、96军',
+    p: [[0, 117.42, 32.94], [19, 117.30, 33.16], [26, 117.24, 33.30], [30, 117.34, 33.06], [65, 117.40, 32.94]],
+    s: [[0, '集结 于 蚌埠'], [19, '北上 增援 双堆集'], [26, '被 阻 于 固镇 以北'], [30, '退回 蚌埠']],
+    end: '始终 未能 与 黄维 兵团 会合',
+    note: '南线 两个 兵团 北援 时，每天 只 前进 数 公里，与 双堆集 咫尺 之遥 却 始终 无法 会合。' },
+
+  { id: 'km-8', name: '第8兵团', side: 'kmt', kind: '兵团', layer: 1,
+    cmd: '刘汝明', str: '约 5 万人', num: '第55、68军 等',
+    p: [[0, 117.30, 32.86], [19, 117.16, 33.08], [26, 117.08, 33.24], [30, 117.26, 33.00], [65, 117.34, 32.90]],
+    s: [[0, '集结 于 蚌埠 以南'], [19, '协同 第6兵团 北上'], [26, '被 阻，攻势 停滞'], [30, '退回 蚌埠']],
+    end: '始终 未能 解 双堆集 之围',
+    note: '刘汝明 是 西北军 旧部，与 蒋介石 嫡系 貌合神离，增援 时 保存 实力，行动 迟缓。' },
+
+  { id: 'km-3s', name: '第3绥靖区', side: 'kmt', kind: '绥靖区', layer: 1, rebel: 1,
+    cmd: '冯治安（司令官）· 何基沣 · 张克侠', str: '2.3 万人 起义', num: '第59、77军',
+    p: [[0, 117.42, 34.44], [2, 117.44, 34.46], [2.4, 117.44, 34.46]],
+    s: [[0, '防守 贾汪、台儿庄 一线'], [2, '11月8日 何基沣、张克侠 率部 起义'], [2.4, '起义 部队 开赴 解放区 整编']],
+    end: '11月8日 起义，徐州 东北 门户 洞开',
+    note: '第三绥靖区 的 两位 副司令官 何基沣、张克侠 均为 中共 地下党员。起义 让 出 的 运河 防线，使 华野 主力 得以 直插 徐州 以东，彻底 切断 黄百韬 兵团 的 退路。' },
+
+  { id: 'km-25', name: '第25军', side: 'kmt', kind: '军', layer: 2,
+    cmd: '陈士章', str: '约 1.5 万人', num: '第40、108、148师',
+    p: [[0, 118.20, 34.40], [3, 117.96, 34.36], [4.5, 117.90, 34.36], [16, 117.90, 34.34], [16.3, 117.90, 34.34]],
+    s: [[0, '随 兵团 西撤'], [4.5, '退守 碾庄圩'], [16, '军 被 全歼']],
+    end: '11月22日 被 全歼，军长 陈士章 化装 逃脱',
+    note: '第25军 是 黄百韬 的 基本 部队，在 碾庄圩 内 凭 水壕 与 集团 地堡 死守，战斗 之 烈 为 战役 第一 阶段 之最。' },
+
+  { id: 'km-18', name: '第18军', side: 'kmt', kind: '军', layer: 3,
+    cmd: '杨伯涛（兵团副司令 胡琏 兼 指挥）', str: '约 3 万人', num: '第11、43、118师',
+    p: [[0, 115.40, 33.00], [8, 115.92, 33.18], [19, 116.58, 33.34], [21, 116.88, 33.66], [39, 116.90, 33.66], [39.4, 116.90, 33.66]],
+    s: [[0, '随 兵团 东进'], [19, '强渡 涡河、浍河 北进'], [33, '第11师 33团 于 大王庄 顽抗'], [39, '军 被 全歼']],
+    end: '12月15日 被 全歼，军长 杨伯涛 被俘',
+    note: '第18军 是 国民党军 "五大主力" 之一，其 第11师 33团 号称 "老虎团"。大王庄 一役，该团 与 我军 反复 争夺，最终 全团 覆没。' },
+
+  { id: 'km-5', name: '第5军', side: 'kmt', kind: '军', layer: 4,
+    cmd: '熊笑三', str: '约 3.5 万人', num: '第45、96、200师',
+    p: [[0, 117.12, 34.40], [7, 117.42, 34.34], [16, 117.38, 34.30], [24, 117.08, 34.24], [28, 116.60, 34.02], [65, 116.60, 34.00], [65.4, 116.60, 34.00]],
+    s: [[0, '集结 于 徐州 以西'], [7, '东援 碾庄，推进 受阻'], [28, '被 围 于 陈官庄'], [65, '军 被 全歼']],
+    end: '1949年1月10日 被 全歼',
+    note: '第5军 是 国民党军 机械化 部队 的 样板，也是 "五大主力" 之一。陈官庄 包围圈 内，机械化 装备 在 泥泞 与 雪地 中 几乎 无用武之地。' }
+];
+
+/* ---------------- 11 段战场故事 ---------------- */
+var STORIES = [
+  { id: 's1', d: 2, lng: 118.22, lat: 34.36, title: '十人桥',
+    date: '1948年11月8日', place: '沂河 · 堰头渡口',
+    body: '黄百韬 兵团 西撤，华野 9纵 27师 沿 沂河 两岸 猛追。堰头 渡口的 木桥 被 炸断，河水 齐胸，对岸 火力 封锁 河面。2连1排 的 10 名 战士 抱着 木板 跳进 冰冷 的 河水，两人 一组 用 肩膀 顶起 桥板，其余 人 扶住 桥腿，硬是 在 水中 架起 一座 人桥。突击队 踩着 他们的 肩膀 冲过 河去，抢占 对岸 阵地。'
+      + ' 战后 统计，这 10 人 在 河水 中 站了 近 一个 小时。',
+    src: '据 《中国人民解放军战史》 第三卷、华野 9纵 战史 材料 及 淮海战役 纪念馆 展陈。' },
+
+  { id: 's2', d: 2, lng: 117.42, lat: 34.44, title: '贾汪起义',
+    date: '1948年11月8日', place: '贾汪 · 台儿庄 一线',
+    body: '战役 发起 第三天，国民党军 第三绥靖区 副司令官 何基沣、张克侠 率 第59军、第77军 一部 共 2.3 万余人 在 贾汪、台儿庄 一带 起义，让出 了 运河 防线。'
+      + ' 徐州 东北 的 大门 就此 洞开，华野 主力 得以 毫无 阻碍 地 直插 徐州 以东，抢占 曹八集、大许家，把 黄百韬 兵团 与 徐州 之间 的 联系 一举 切断。',
+    src: '起义 人数 据 《淮海战役》（中共党史出版社）；何基沣、张克侠 均为 中共 地下党员。' },
+
+  { id: 's3', d: 10, lng: 116.98, lat: 33.63, title: '一刀切断徐蚌线',
+    date: '1948年11月16日', place: '宿县',
+    body: '中原 野战军 第3纵队 攻克 宿县，全歼 守军 一个 师 及 保安 部队。宿县 位于 津浦铁路 徐蚌段 中点，此地 一失，徐州 与 蚌埠 之间 的 铁路 大动脉 被 拦腰 斩断。'
+      + ' 徐州 数十万 大军 的 补给 与 退路，从此 只剩 空中。毛泽东 后来 评价，攻占 宿县 是 淮海战役 的 "关节点"。',
+    src: '据 《中国人民解放军战史》 第三卷；宿县 攻克 时间 为 11月16日 拂晓。' },
+
+  { id: 's4', d: 10, lng: 116.60, lat: 33.55, title: '总前委：五个人，一盘棋',
+    date: '1948年11月16日', place: '临涣集 · 文昌宫',
+    body: '就在 宿县 攻克 的 同一天，中央军委 决定 成立 淮海战役 总前委，由 刘伯承、陈毅、邓小平、粟裕、谭震林 五人 组成，邓小平 为 书记，统一 指挥 中原、华东 两大 野战军。'
+      + ' 此战 我军 参战 部队 来自 两个 野战军、数个 军区，若无 统一 指挥，难以 在 66 天 内 完成 三次 大规模 围歼。总前委 的 驻地，就在 临涣集 的 文昌宫。',
+    src: '总前委 组成 及 分工 见 《淮海战役 文献》 与 《邓小平 年谱》；驻地 旧址 今 存 濉溪县 临涣镇。' },
+
+  { id: 's5', d: 7, lng: 117.50, lat: 34.31, title: '徐东阻击战：十一昼夜',
+    date: '1948年11月13日—22日', place: '大许家 一线',
+    body: '黄百韬 被围 于 碾庄圩，邱清泉 第2兵团、李弥 第13兵团 从 徐州 东援。华野 以 第10纵队 等 部 在 大许家 一线 构筑 阻击 阵地，正面 顶住 两个 兵团、数百辆 坦克 与 重炮 的 轮番 冲击。'
+      + ' 十一 昼夜，援军 只 前进 了 十余 公里。等到 碾庄圩 枪声 停止，两 个 兵团 距离 黄百韬 的 兵团部，仍 有 数十 华里。',
+    src: '阻击 时间 与 里程 据 《中国人民解放军战史》 第三卷 及 华野 10纵 战史。' },
+
+  { id: 's6', d: 21, lng: 116.80, lat: 33.50, title: '廖运周：从内部打开的缺口',
+    date: '1948年11月27日', place: '双堆集 东南',
+    body: '黄维 兵团 被围 后，决定 以 四个 师 齐头 并进，向 东南 突围。第85军 第110师 师长 廖运周 是 中共 地下党员，他 主动 请缨 打 头阵，率 部 5000 余人 在 突围 途中 起义，让开 通道。'
+      + ' 跟在 后面 的 三个 师 一头 撞进 了 我军 的 伏击 圈，突围 计划 彻底 破产。黄维 此后 再 未 组织 起 像样 的 突围。',
+    src: '起义 兵力 与 时间 据 《淮海战役》 及 第12兵团 被俘 将领 回忆 材料。' },
+
+  { id: 's7', d: 33, lng: 116.95, lat: 33.68, title: '大王庄血战',
+    date: '1948年12月9日—10日', place: '双堆集 东北 · 大王庄',
+    body: '大王庄 是 双堆集 包围圈 东北 的 屏障，守军 是 第18军 第11师 33团——号称 "老虎团"。中野 6纵 与 兄弟 部队 发起 攻击，一夜 之间 村庄 数度 易手，双方 在 残垣 断壁 间 反复 冲杀，'
+      + ' 有的 连队 打光 了 就 由 炊事员、通信员 补上。战斗 结束 时，大王庄 内外 的 雪地 被 炮火 翻成 焦土，"老虎团" 全团 覆没。',
+    src: '据 中野 6纵 战史 与 《淮海战役 ・ 双堆集 之战》；"老虎团" 为 第11师 33团 的 俗称。' },
+
+  { id: 's8', d: 20, lng: 117.70, lat: 34.02, title: '543 万人与 88 万辆小车',
+    date: '1948年11月—1949年1月', place: '苏鲁豫皖 支前 小道',
+    body: '战役 期间，苏、鲁、豫、皖 四省 动员 支前 民工 543 万人，出动 担架 20.6 万副、大小 车 88.1 万辆，筹运 粮食 9.6 亿斤。'
+      + ' 寒冬 里，民工 推着 独轮车 在 泥泞 的 土路 上 排成 长龙，白天 防空 隐蔽，夜里 赶路。陈毅 说："淮海战役的胜利，是人民群众用小车推出来的。"',
+    src: '支前 数据 据 《淮海战役 支前 史料 选编》；"小车" 之说 见 《陈毅 军事 文选》 及 多种 回忆 文献。' },
+
+  { id: 's9', d: 16, lng: 117.88, lat: 34.34, title: '黄百韬的最后一天',
+    date: '1948年11月22日', place: '碾庄圩 · 兵团部',
+    body: '碾庄圩 被围 十六 天。外围 十余 个 村落 一个 一个 被 攻破，兵团部 所在 的 圩子 也 被 炮火 打穿。22日 黄昏，第7兵团 全线 崩溃，黄百韬 在 突围 途中 自杀 身亡，'
+      + ' 第25军 军长 陈士章 化装 逃脱，第64军 军长 刘镇湘 被俘。至此，国民党军 在 淮海 战场 上 的 第一个 兵团 宣告 覆灭。',
+    src: '黄百韬 死因 有 自杀 与 阵亡 两说，此处 采 自杀 说，见 台湾 方面 《戡乱 战史》 及 大陆 战史 的 通行 记载。' },
+
+  { id: 's10', d: 39, lng: 116.83, lat: 33.60, title: '黄维被俘',
+    date: '1948年12月15日', place: '双堆集 以西',
+    body: '12月15日 黄昏，第12兵团 残部 在 双堆集 以西 突围。兵团 司令官 黄维 换 上 士兵 棉衣，混在 溃兵 中 逃跑，被 我军 战士 在 一条 水沟 边 拦下。'
+      + ' 被 认出来 时，他 只 说 了 一句 "我就是黄维"。同日，第12兵团 全部 覆灭，兵团 副司令 胡琏 乘 战车 突围 逃脱。',
+    src: '据 《淮海战役 ・ 双堆集 之战》 及 参战 部队 回忆；黄维 被俘 于 双堆集 以西 的 大王庄 附近。' },
+
+  { id: 's11', d: 65, lng: 116.50, lat: 33.98, title: '陈官庄：最后一夜',
+    date: '1949年1月10日', place: '陈官庄 以西 · 张老庄',
+    body: '1月6日 总攻 发起，四天 之内，包围圈 被 压缩 到 几个 村庄。10日 拂晓，杜聿明 带 十余人 化装 突围，在 张老庄 附近 被 华野 4纵 的 哨兵 截获。'
+      + ' 他 自称 是 "军需 官"，却 戴着 一只 金表、抽着 美国 香烟。同日，邱清泉 阵亡，李弥 只身 逃脱。淮海战役 以 55.5 万 国民党军 被 歼 而 结束。',
+    src: '据 《杜聿明 回忆录》 与 华野 4纵 战史；杜聿明 被俘 时间 为 1949年1月10日 凌晨。' }
+];
+
+/* ---------------- 四层态势 ---------------- */
+var LAYERS = [
+  { id: 1, name: '战略态势 · 十字路口', short: '战略态势', date: '1948.11.6',
+    cam: { az: -0.56, pol: 0.88, dist: 330, tx: 0, tz: 10 },
+    lead: '徐州，津浦、陇海 两 条 铁路 的 交点。国民党军 80 万 人 沿 两条 铁路 摆成 一个 十字，我军 60 万 人 从 四面 合拢。' },
+  { id: 2, name: '第一阶段 · 碾庄圩', short: '碾庄圩', date: '11.6 — 11.22',
+    cam: { az: -0.50, pol: 0.84, dist: 235, tx: 55, tz: -30 },
+    lead: '围歼 黄百韬 第7兵团 于 碾庄圩。11月22日 兵团 覆灭，第一阶段 共 歼敌 17.8 万余人。' },
+  { id: 3, name: '第二阶段 · 双堆集', short: '双堆集', date: '11.23 — 12.15',
+    cam: { az: -0.30, pol: 0.82, dist: 235, tx: -30, tz: 40 },
+    lead: '围歼 黄维 第12兵团 于 双堆集。12月15日 兵团 覆灭，第二阶段 共 歼敌 11.8 万余人。' },
+  { id: 4, name: '第三阶段 · 陈官庄', short: '陈官庄', date: '12.16 — 1.10',
+    cam: { az: -0.34, pol: 0.80, dist: 240, tx: -55, tz: 4 },
+    lead: '围歼 杜聿明 集团 于 陈官庄。1949年1月10日 全役 结束，第三阶段 共 歼敌 26 万余人。' }
+];
+
+/* ---------------- 大事记（字幕 + 时间轴刻度） ---------------- */
+var EVENTS = [
+  { d: 0, t: '华野 主力 自 临沂、滕县 一线 分路 南下，中原 野战军 同时 向 宿县 方向 挺进。淮海战役 开始。', mark: '战役发起' },
+  { d: 2, t: '何基沣、张克侠 率 第三绥靖区 2.3 万余人 在 贾汪 起义，徐州 东北 门户 洞开。', mark: '贾汪起义' },
+  { d: 2.4, t: '华野 9纵 于 沂河 堰头 架起 "十人桥" 强渡，直扑 新安镇 追歼 黄百韬 兵团。' },
+  { d: 4, t: '华野 将 黄百韬 第7兵团 4 个 军 合围 于 碾庄圩 及 周围 十余 村落。', mark: '围黄百韬' },
+  { d: 7, t: '邱清泉、李弥 两 兵团 自 徐州 东援，华野 10纵 等 部 于 大许家 一线 展开 阻击。', mark: '徐东阻击' },
+  { d: 8, t: '中野 逼近 宿县，津浦 铁路 徐蚌段 即将 被 切断。' },
+  { d: 10, t: '中野 3纵 攻克 宿县，徐州 与 蚌埠 之间 的 铁路 被 拦腰 斩断，徐州 成为 孤点。', mark: '宿县攻克' },
+  { d: 10.2, t: '中央军委 决定 成立 淮海战役 总前委：刘伯承、陈毅、邓小平、粟裕、谭震林，邓小平 为 书记。', mark: '总前委' },
+  { d: 12, t: '黄维 第12兵团 抵 蒙城，强渡 涡河 北进，向 宿县 猛扑。' },
+  { d: 15, t: '碾庄圩 外围 村落 全部 肃清，攻击 部队 转入 对 圩墙 的 近迫 作业。' },
+  { d: 16, t: '第7兵团 覆灭，黄百韬 自杀。第一阶段 结束，共 歼敌 17.8 万余人。', mark: '碾庄大捷' },
+  { d: 17, t: '中野 将 黄维 第12兵团 合围 于 双堆集 地区。', mark: '围黄维' },
+  { d: 21, t: '廖运周 率 第110师 5000 余人 起义，黄维 的 突围 计划 破产。', mark: '廖运周起义' },
+  { d: 24, t: '杜聿明 率 邱清泉、李弥、孙元良 三 个 兵团 及 徐州 机关 约 30 万人 弃 徐州 西撤。', mark: '弃守徐州' },
+  { d: 25, t: '徐州 解放。华野 以 11 个 纵队 展开 平行 追击。' },
+  { d: 28, t: '华野 将 杜聿明 集团 合围 于 陈官庄、青龙集 一带。', mark: '围杜聿明' },
+  { d: 30, t: '孙元良 第16兵团 自行 突围，一夜 溃散，孙元良 只身 逃脱。' },
+  { d: 33, t: '大王庄 血战：中野 6纵 与 第18军 "老虎团" 反复 争夺，村庄 数度 易手。', mark: '大王庄' },
+  { d: 39, t: '双堆集 总攻 结束，第12兵团 覆灭，黄维 被俘。第二阶段 共 歼敌 11.8 万余人。', mark: '双堆集大捷' },
+  { d: 40, t: '为 配合 平津战役，对 陈官庄 包围圈 暂 不 总攻，转入 战场 休整 与 政治 攻势。' },
+  { d: 44, t: '连日 大雪，包围圈 内 粮弹 俱绝，空投 杯水车薪，士兵 宰杀 骡马 充饥。', mark: '大雪' },
+  { d: 61, t: '华野 对 陈官庄 发起 总攻，四天 之内 将 包围圈 压缩 至 几个 村庄。', mark: '总攻' },
+  { d: 65, t: '杜聿明 集团 覆灭，杜聿明 被俘，邱清泉 阵亡，李弥 逃脱。淮海战役 结束，全役 66 天。', mark: '全役结束' }
+];
+
+/* ---------------- 进攻箭头 ---------------- */
+var ARROWS = [
+  { side: 'pla', from: [118.34, 34.62], to: [118.20, 34.36], d0: 0, d1: 4, label: '华野 主力 南下' },
+  { side: 'pla', from: [118.18, 34.30], to: [117.92, 34.34], d0: 2, d1: 6 },
+  { side: 'pla', from: [117.62, 34.42], to: [117.56, 34.33], d0: 2.5, d1: 6, label: '抢占 曹八集' },
+  { side: 'pla', from: [117.36, 34.50], to: [117.44, 34.44], d0: 1, d1: 4 },
+  { side: 'kmt', from: [117.26, 34.34], to: [117.44, 34.30], d0: 7, d1: 16, label: '东援' },
+  { side: 'pla', from: [117.60, 34.30], to: [117.58, 34.31], d0: 7, d1: 16, label: '阻击' },
+  { side: 'pla', from: [116.60, 33.90], to: [116.98, 33.65], d0: 8, d1: 11, label: '攻 宿县' },
+  { side: 'pla', from: [116.50, 33.20], to: [116.83, 33.58], d0: 18, d1: 21, label: '合围' },
+  { side: 'kmt', from: [117.30, 33.10], to: [117.10, 33.55], d0: 19, d1: 26, label: '北援' },
+  { side: 'pla', from: [117.05, 33.20], to: [117.20, 33.42], d0: 19, d1: 26, label: '阻击' },
+  { side: 'kmt', from: [117.20, 34.24], to: [116.60, 34.02], d0: 24, d1: 28, label: '西撤' },
+  { side: 'pla', from: [117.30, 34.12], to: [116.66, 34.02], d0: 25, d1: 30, label: '平行 追击' },
+  { side: 'pla', from: [116.90, 34.10], to: [116.60, 34.00], d0: 42, d1: 65, label: '收紧 包围' },
+  { side: 'pla', from: [116.30, 33.90], to: [116.50, 33.98], d0: 61, d1: 65, label: '总攻' }
+];
+
+/* ============================================================
+   引擎：画布 / 相机 / 投影 / 地形 / 图元
+   ============================================================ */
+var cv = document.getElementById('stage');
+var ctx = cv.getContext('2d', { alpha: false });
+var VW = 1, VH = 1, DPR = 1, FOCAL = 800;
+var FOV = 0.74;
+var NEAR = 8;
+
+var now = 0, lastT = 0, dt = 0;
+
+/* ---------- 状态 ---------- */
+var state = {
+  day: 0,
+  playing: false,
+  speed: 1,
+  revealed: 1,
+  selectedUnit: null,
+  selectedStory: null,
+  found: {},
+  foundCount: 0,
+  hover: null,
+  intro: 1
+};
+
+/* ---------- 小工具 ---------- */
+function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+function lerp(a, b, t) { return a + (b - a) * t; }
+function smooth(t) { return t * t * (3 - 2 * t); }
+function ease(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+function hash2(x, y) { var s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123; return s - Math.floor(s); }
+function vnoise(x, y) {
+  var xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+  var u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+  var a = hash2(xi, yi), b = hash2(xi + 1, yi), c = hash2(xi, yi + 1), d = hash2(xi + 1, yi + 1);
+  return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+}
+function roundRect(c, x, y, w, h, r) {
+  c.beginPath();
+  c.moveTo(x + r, y);
+  c.lineTo(x + w - r, y); c.quadraticCurveTo(x + w, y, x + w, y + r);
+  c.lineTo(x + w, y + h - r); c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  c.lineTo(x + r, y + h); c.quadraticCurveTo(x, y + h, x, y + h - r);
+  c.lineTo(x, y + r); c.quadraticCurveTo(x, y, x + r, y);
+  c.closePath();
+}
+
+/* ---------- 日期 ---------- */
+var D0 = Date.UTC(1948, 10, 6);
+function dateOf(day) {
+  var d = new Date(D0 + Math.floor(day) * 86400000);
+  var y = d.getUTCFullYear(), m = d.getUTCMonth() + 1, dd = d.getUTCDate();
+  function p2(n) { return n < 10 ? '0' + n : '' + n; }
+  return { y: y, m: m, d: dd, str: y + '.' + p2(m) + '.' + p2(dd), md: p2(m) + '.' + p2(dd), idx: Math.floor(day) + 1 };
+}
+function stageOf(day) {
+  if (day <= 0.9) return 0;
+  if (day < 17) return 1;
+  if (day < 40) return 2;
+  return 3;
+}
+
+/* ---------- 相机 ---------- */
+var camT = { az: -0.62, pol: 0.90, dist: 320, tx: 0, tz: 6 };
+var cam = { az: -0.62, pol: 0.90, dist: 320, tx: 0, tz: 6 };
+var eye = { x: 0, y: 0, z: 0 };
+var bR = { x: 1, y: 0, z: 0 }, bU = { x: 0, y: 1, z: 0 }, bF = { x: 0, y: 0, z: -1 };
+
+function updateCamera(k) {
+  cam.az = lerp(cam.az, camT.az, k);
+  cam.pol = lerp(cam.pol, camT.pol, k);
+  cam.dist = lerp(cam.dist, camT.dist, k);
+  cam.tx = lerp(cam.tx, camT.tx, k);
+  cam.tz = lerp(cam.tz, camT.tz, k);
+  var cp = Math.cos(cam.pol), sp = Math.sin(cam.pol), sa = Math.sin(cam.az), ca = Math.cos(cam.az);
+  eye.x = cam.tx + cp * sa * cam.dist;
+  eye.y = sp * cam.dist;
+  eye.z = cam.tz + cp * ca * cam.dist;
+  var fx = cam.tx - eye.x, fy = -eye.y, fz = cam.tz - eye.z;
+  var fl = Math.sqrt(fx * fx + fy * fy + fz * fz) || 1;
+  fx /= fl; fy /= fl; fz /= fl;
+  var rl = Math.sqrt(fx * fx + fz * fz) || 1;
+  bR.x = -fz / rl; bR.y = 0; bR.z = fx / rl;
+  bF.x = fx; bF.y = fy; bF.z = fz;
+  bU.x = -bR.z * fy; bU.y = bR.z * fx - bR.x * fz; bU.z = bR.x * fy;
+}
+
+var P = { x: 0, y: 0, s: 1, d: 0, ok: false };
+function proj(x, y, z) {
+  var dx = x - eye.x, dy = y - eye.y, dz = z - eye.z;
+  var vx = dx * bR.x + dy * bR.y + dz * bR.z;
+  var vy = dx * bU.x + dy * bU.y + dz * bU.z;
+  var vz = dx * bF.x + dy * bF.y + dz * bF.z;
+  if (vz < NEAR) { P.ok = false; P.d = vz; return P; }
+  var k = FOCAL / vz;
+  P.x = VW * 0.5 + vx * k;
+  P.y = VH * 0.5 - vy * k;
+  P.s = k; P.d = vz; P.ok = true;
+  return P;
+}
+
+/* ---------- 地形 ---------- */
+var N = 48;
+var BX0 = -196, BX1 = 196, BZ0 = -150, BZ1 = 172;
+var CELX = (BX1 - BX0) / N, CELZ = (BZ1 - BZ0) / N;
+var HG = new Float32Array((N + 1) * (N + 1));
+var TILE_COL = new Array(N * N);
+var WATER_Y = -0.62;
+
+var riverWorld = [];
+function buildRivers() {
+  var i, r;
+  for (i = 0; i < RIVERS.length; i++) {
+    r = RIVERS[i];
+    var pts = [];
+    for (var j = 0; j < r.pts.length; j++) pts.push({ x: gx(r.pts[j][0]), z: gz(r.pts[j][1]) });
+    riverWorld.push({ n: r.n, pts: pts });
+  }
+}
+function segDist(px, pz, ax, az, bx, bz) {
+  var dx = bx - ax, dz = bz - az;
+  var l2 = dx * dx + dz * dz;
+  var t = l2 > 0 ? ((px - ax) * dx + (pz - az) * dz) / l2 : 0;
+  t = clamp(t, 0, 1);
+  var qx = ax + dx * t - px, qz = az + dz * t - pz;
+  return Math.sqrt(qx * qx + qz * qz);
+}
+function riverDist(px, pz) {
+  var best = 999;
+  for (var i = 0; i < riverWorld.length; i++) {
+    var pts = riverWorld[i].pts;
+    for (var j = 0; j < pts.length - 1; j++) {
+      var d = segDist(px, pz, pts[j].x, pts[j].z, pts[j + 1].x, pts[j + 1].z);
+      if (d < best) best = d;
+    }
+  }
+  return best;
+}
+function baseH(x, z) {
+  var h = 0;
+  h += 4.8 * (vnoise(x * 0.021 + 3.1, z * 0.021 + 7.7) - 0.46);
+  h += 1.6 * (vnoise(x * 0.055 + 21.3, z * 0.055 + 4.2) - 0.5);
+  h += 0.5 * (vnoise(x * 0.13 + 5.5, z * 0.13 + 9.1) - 0.5);
+  return h;
+}
+function terrainH(x, z) {
+  var d = riverDist(x, z);
+  var h = baseH(x, z);
+  if (d < 3.6) h -= (1 - d / 3.6) * 2.3;
+  return h;
+}
+function buildTerrain() {
+  buildRivers();
+  var i, j;
+  for (i = 0; i <= N; i++) {
+    for (j = 0; j <= N; j++) {
+      HG[i * (N + 1) + j] = terrainH(BX0 + i * CELX, BZ0 + j * CELZ);
+    }
+  }
+  /* 顶点着色：先算格点明暗，再按 4 个格点取平均，避免逐格跳色 */
+  var GPX = N + 1;
+  var VR = new Float32Array(GPX * GPX), VG = new Float32Array(GPX * GPX), VB = new Float32Array(GPX * GPX);
+  for (i = 0; i <= N; i++) {
+    for (j = 0; j <= N; j++) {
+      var vi = i * GPX + j;
+      var i0 = i > 0 ? i - 1 : 0, i1 = i < N ? i + 1 : N;
+      var j0 = j > 0 ? j - 1 : 0, j1 = j < N ? j + 1 : N;
+      var dhx = (HG[i1 * GPX + j] - HG[i0 * GPX + j]) / Math.max(0.001, (i1 - i0) * CELX);
+      var dhz = (HG[i * GPX + j1] - HG[i * GPX + j0]) / Math.max(0.001, (j1 - j0) * CELZ);
+      var EX = 5.5;
+      var ax = -dhx * EX, az2 = -dhz * EX;
+      var al = Math.sqrt(ax * ax + 1 + az2 * az2);
+      var lam = (ax * -0.42 + 0.78 + az2 * -0.46) / al;
+      var sh = clamp((lam - 0.40) / 0.44, 0, 1);
+      var el = clamp((HG[vi] + 2.4) / 5.2, 0, 1);
+      var vv = 0.24 + 0.44 * sh + 0.26 * el + 0.05 * (hash2(i * 3.17, j * 5.31) - 0.5);
+      VR[vi] = 92 + 140 * vv;
+      VG[vi] = 78 + 136 * vv;
+      VB[vi] = 54 + 130 * vv;
+    }
+  }
+  /* 顶点明暗做两遍 3x3 低通，消除逐格跳色 */
+  blurGrid(VR, GPX, 2);
+  blurGrid(VG, GPX, 2);
+  blurGrid(VB, GPX, 2);
+  for (i = 0; i < N; i++) {
+    for (j = 0; j < N; j++) {
+      var h = (HG[i * (N + 1) + j] + HG[(i + 1) * (N + 1) + j] + HG[i * (N + 1) + j + 1] + HG[(i + 1) * (N + 1) + j + 1]) / 4;
+      var cxw = BX0 + (i + 0.5) * CELX, czw = BZ0 + (j + 0.5) * CELZ;
+      var wd = riverDist(cxw, czw);
+      var id = i * N + j;
+      var nz = hash2(i * 3.17, j * 5.31);
+      var q1 = i * GPX + j, q2 = (i + 1) * GPX + j, q3 = (i + 1) * GPX + j + 1, q4 = i * GPX + j + 1;
+      var r = (VR[q1] + VR[q2] + VR[q3] + VR[q4]) / 4;
+      var g = (VG[q1] + VG[q2] + VG[q3] + VG[q4]) / 4;
+      var b = (VB[q1] + VB[q2] + VB[q3] + VB[q4]) / 4;
+      TILE_COL[id] = 'rgb(' + Math.round(clamp(r, 0, 255)) + ',' + Math.round(clamp(g, 0, 255)) + ',' + Math.round(clamp(b, 0, 255)) + ')';
+    }
+  }
+  buildContours();
+}
+
+/* 网格标量场低通滤波（分离式 3x3，边界钳制） */
+function blurGrid(a, w, passes) {
+  var tmp = new Float32Array(a.length);
+  var n = w;
+  for (var p = 0; p < passes; p++) {
+    for (var i = 0; i < n; i++) {
+      for (var j = 0; j < n; j++) {
+        var idx = i * n + j;
+        var l = j > 0 ? a[idx - 1] : a[idx];
+        var r = j < n - 1 ? a[idx + 1] : a[idx];
+        tmp[idx] = (l + a[idx] * 2 + r) * 0.25;
+      }
+    }
+    for (var j2 = 0; j2 < n; j2++) {
+      for (var i2 = 0; i2 < n; i2++) {
+        var id2 = i2 * n + j2;
+        var u = i2 > 0 ? tmp[id2 - n] : tmp[id2];
+        var d = i2 < n - 1 ? tmp[id2 + n] : tmp[id2];
+        a[id2] = (u + tmp[id2] * 2 + d) * 0.25;
+      }
+    }
+  }
+}
+
+/* ---------- 等高线 ---------- */
+var CONTOURS = [];
+function edgeCross(ha, hb, xa, za, xb, zb, L, out) {
+  if ((ha < L && hb >= L) || (ha >= L && hb < L)) {
+    var t = (L - ha) / (hb - ha);
+    out.push(xa + (xb - xa) * t, za + (zb - za) * t);
+  }
+}
+function buildContours() {
+  var G = N + 1, segs = [];
+  for (var i = 0; i < N; i++) {
+    for (var j = 0; j < N; j++) {
+      var x0 = BX0 + i * CELX, x1 = x0 + CELX;
+      var z0 = BZ0 + j * CELZ, z1 = z0 + CELZ;
+      var h00 = HG[i * G + j], h10 = HG[(i + 1) * G + j];
+      var h11 = HG[(i + 1) * G + j + 1], h01 = HG[i * G + j + 1];
+      var lo = Math.min(h00, h10, h11, h01), hi = Math.max(h00, h10, h11, h01);
+      var L0 = Math.ceil(lo), L1 = Math.floor(hi);
+      for (var L = L0; L <= L1; L++) {
+        var pts = [];
+        edgeCross(h00, h10, x0, z0, x1, z0, L, pts);
+        edgeCross(h10, h11, x1, z0, x1, z1, L, pts);
+        edgeCross(h11, h01, x1, z1, x0, z1, L, pts);
+        edgeCross(h01, h00, x0, z1, x0, z0, L, pts);
+        for (var q = 0; q + 3 < pts.length; q += 2) {
+          segs.push(pts[q], pts[q + 1], pts[q + 2], pts[q + 3], L);
+        }
+      }
+    }
+  }
+  CONTOURS = segs;
+}
+
+/* ---------- 单位位置 ---------- */
+function unitPos(u, day) {
+  var p = u.p;
+  if (!p || !p.length) return { lng: 117, lat: 34 };
+  if (day <= p[0][0]) return { lng: p[0][1], lat: p[0][2] };
+  for (var i = 0; i < p.length - 1; i++) {
+    if (day >= p[i][0] && day <= p[i + 1][0]) {
+      var t = (day - p[i][0]) / Math.max(0.001, p[i + 1][0] - p[i][0]);
+      t = smooth(clamp(t, 0, 1));
+      return { lng: lerp(p[i][1], p[i + 1][1], t), lat: lerp(p[i][2], p[i + 1][2], t) };
+    }
+  }
+  var last = p[p.length - 1];
+  return { lng: last[1], lat: last[2] };
+}
+function statusOf(u, day) {
+  var s = u.s || [];
+  var txt = '';
+  for (var i = 0; i < s.length; i++) { if (day >= s[i][0]) txt = s[i][1]; }
+  return txt;
+}
+var WIPED = { 'km-7': 16.4, 'km-25': 16.3, 'km-12': 39.4, 'km-18': 39.4, 'km-16': 30.4, 'km-2': 65.4, 'km-5': 65.4, 'km-13': 65.4 };
+var REBEL = { 'km-3s': 2.4 };
+function unitParts(u) {
+  var n = u.name, pre = '', main = n;
+  if (n.indexOf('华东野战军') === 0) { pre = '华野'; main = '司令部'; }
+  else if (n.indexOf('中原野战军') === 0) { pre = '中野'; main = '司令部'; }
+  else if (n.indexOf('徐州') === 0) { pre = '徐州'; main = '剿总'; }
+  else if (n.indexOf('华野') === 0) { pre = '华野'; main = n.slice(3); }
+  else if (n.indexOf('中野') === 0) { pre = '中野'; main = n.slice(3); }
+  if (main === '特种兵纵队') main = '特纵';
+  return { pre: pre, main: main };
+}
+
+
+/* ============================================================
+   渲染：一帧的完整合成
+   ============================================================ */
+var GP = N + 1;
+var gPX = new Float32Array(GP * GP), gPY = new Float32Array(GP * GP), gPS = new Float32Array(GP * GP);
+var gOK = new Uint8Array(GP * GP);
+var cellOrder = new Array(N * N), cellDepth = new Float32Array(N * N);
+for (var _ci = 0; _ci < N * N; _ci++) cellOrder[_ci] = _ci;
+
+var pickUnits = [], pickStories = [];
+var lblW = 1;
+
+var bgCv = null;
+function buildBackdrop() {
+  bgCv = document.createElement('canvas');
+  bgCv.width = Math.max(2, Math.round(VW));
+  bgCv.height = Math.max(2, Math.round(VH));
+  var b = bgCv.getContext('2d');
+  var g = b.createRadialGradient(VW * 0.5, VH * 0.40, 40, VW * 0.5, VH * 0.52, Math.max(VW, VH) * 0.82);
+  g.addColorStop(0, '#251a10');
+  g.addColorStop(0.5, '#150e08');
+  g.addColorStop(1, '#070403');
+  b.fillStyle = g;
+  b.fillRect(0, 0, VW, VH);
+  var g2 = b.createRadialGradient(VW * 0.5, VH * 0.52, 20, VW * 0.5, VH * 0.54, Math.max(VW, VH) * 0.46);
+  g2.addColorStop(0, 'rgba(158,102,48,0.16)');
+  g2.addColorStop(1, 'rgba(0,0,0,0)');
+  b.fillStyle = g2;
+  b.fillRect(0, 0, VW, VH);
+}
+function drawBackdrop() {
+  if (!bgCv) buildBackdrop();
+  ctx.drawImage(bgCv, 0, 0);
+}
+
+function projectGrid() {
+  for (var i = 0; i <= N; i++) {
+    for (var j = 0; j <= N; j++) {
+      var id = i * GP + j;
+      var p = proj(BX0 + i * CELX, HG[id], BZ0 + j * CELZ);
+      if (p.ok) { gOK[id] = 1; gPX[id] = p.x; gPY[id] = p.y; gPS[id] = p.s; }
+      else gOK[id] = 0;
+    }
+  }
+}
+
+function drawTerrain() {
+  var i, j, id, a, b, c, d;
+  for (i = 0; i < N; i++) {
+    for (j = 0; j < N; j++) {
+      id = i * N + j;
+      var q1 = i * GP + j, q2 = (i + 1) * GP + j, q3 = (i + 1) * GP + j + 1, q4 = i * GP + j + 1;
+      if (!gOK[q1] || !gOK[q2] || !gOK[q3] || !gOK[q4]) { cellDepth[id] = -1; continue; }
+      cellDepth[id] = (gPS[q1] > 0 ? 1 / gPS[q1] : 0) + (gPS[q2] > 0 ? 1 / gPS[q2] : 0);
+    }
+  }
+  cellOrder.sort(function (m, n) { return cellDepth[n] - cellDepth[m]; });
+  ctx.lineJoin = 'round';
+  for (var k = 0; k < cellOrder.length; k++) {
+    id = cellOrder[k];
+    if (cellDepth[id] <= 0) continue;
+    i = (id / N) | 0; j = id % N;
+    var p1 = i * GP + j, p2 = (i + 1) * GP + j, p3 = (i + 1) * GP + j + 1, p4 = i * GP + j + 1;
+    ctx.beginPath();
+    ctx.moveTo(gPX[p1], gPY[p1]);
+    ctx.lineTo(gPX[p2], gPY[p2]);
+    ctx.lineTo(gPX[p3], gPY[p3]);
+    ctx.lineTo(gPX[p4], gPY[p4]);
+    ctx.closePath();
+    ctx.fillStyle = TILE_COL[id];
+    ctx.fill();
+    ctx.strokeStyle = TILE_COL[id];
+    ctx.lineWidth = 0.7;
+    ctx.stroke();
+  }
+}
+
+/* ---------- 沙盘木框 ---------- */
+function tableSlabs() {
+  return [
+    { n: 'n', pts: [[BX0, BZ0], [BX1, BZ0]], out: [0, -1] },
+    { n: 'e', pts: [[BX1, BZ0], [BX1, BZ1]], out: [1, 0] },
+    { n: 's', pts: [[BX1, BZ1], [BX0, BZ1]], out: [0, 1] },
+    { n: 'w', pts: [[BX0, BZ1], [BX0, BZ0]], out: [-1, 0] }
+  ];
+}
+function drawFrame(which) {
+  var slabs = tableSlabs();
+  /* 视角压低时木框淡出，让沙盘“落地”为战场 */
+  ctx.globalAlpha = clamp((cam.pol - 0.13) / 0.22, 0.10, 1);
+  for (var i = 0; i < slabs.length; i++) {
+    var s = slabs[i];
+    var cxw = (s.pts[0][0] + s.pts[1][0]) / 2, czw = (s.pts[0][1] + s.pts[1][1]) / 2;
+    var facing = (eye.x - cxw) * s.out[0] + (eye.z - czw) * s.out[1] > 0;
+    if (which === 'near' ? !facing : facing) continue;
+    var depth = -10;
+    var pts = [
+      [s.pts[0][0], 0, s.pts[0][1]], [s.pts[1][0], 0, s.pts[1][1]],
+      [s.pts[1][0], depth, s.pts[1][1]], [s.pts[0][0], depth, s.pts[0][1]]
+    ];
+    var scr = [], ok = true;
+    for (var q = 0; q < 4; q++) {
+      var p = proj(pts[q][0], pts[q][1], pts[q][2]);
+      if (!p.ok) { ok = false; break; }
+      scr.push([p.x, p.y]);
+    }
+    if (!ok) continue;
+    var gr = ctx.createLinearGradient(scr[0][0], scr[0][1], scr[2][0], scr[2][1]);
+    gr.addColorStop(0, '#4a3524');
+    gr.addColorStop(0.35, '#332318');
+    gr.addColorStop(1, '#1c1209');
+    ctx.beginPath();
+    ctx.moveTo(scr[0][0], scr[0][1]);
+    ctx.lineTo(scr[1][0], scr[1][1]);
+    ctx.lineTo(scr[2][0], scr[2][1]);
+    ctx.lineTo(scr[3][0], scr[3][1]);
+    ctx.closePath();
+    ctx.fillStyle = gr;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(120,92,52,.5)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* ---------- 水系 / 铁路 / 公路 ---------- */
+function strokeGeo(pts, widthKm, color, dash) {
+  ctx.strokeStyle = color;
+  ctx.lineCap = 'round';
+  ctx.setLineDash(dash || []);
+  for (var i = 0; i < pts.length - 1; i++) {
+    var ax = pts[i].x, az = pts[i].z, bx = pts[i + 1].x, bz = pts[i + 1].z;
+    var mx = (ax + bx) / 2, mz = (az + bz) / 2;
+    var p0 = proj(ax, terrainH(ax, az) + 0.22, az);
+    if (!p0.ok) continue;
+    var x0 = p0.x, y0 = p0.y, s0 = p0.s;
+    var p1 = proj(bx, terrainH(bx, bz) + 0.22, bz);
+    if (!p1.ok) continue;
+    var x1 = p1.x, y1 = p1.y, s1 = p1.s;
+    var pm = proj(mx, terrainH(mx, mz) + 0.22, mz);
+    var sm = pm.ok ? pm.s : (s0 + s1) * 0.5;
+    ctx.lineWidth = Math.max(0.8, widthKm * (s0 + sm) * 0.5);
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.lineTo(x1, y1);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+}
+
+function drawRivers() {
+  for (var i = 0; i < riverWorld.length; i++) {
+    var r = riverWorld[i];
+    strokeGeo(r.pts, 5.6, 'rgba(58,80,88,.13)');
+    strokeGeo(r.pts, 2.7, 'rgba(88,120,131,.40)');
+    strokeGeo(r.pts, 0.9, 'rgba(150,178,186,.26)');
+    strokeGeo(r.pts, 0.3, 'rgba(214,232,232,.22)');
+  }
+}
+function drawRails() {
+  for (var i = 0; i < RAILS.length; i++) {
+    var pts = [];
+    for (var j = 0; j < RAILS[i].pts.length; j++) pts.push({ x: gx(RAILS[i].pts[j][0]), z: gz(RAILS[i].pts[j][1]) });
+    strokeGeo(pts, 1.7, 'rgba(58,42,28,.55)', [7, 6]);
+    strokeGeo(pts, 0.55, 'rgba(238,224,196,.45)');
+  }
+}
+function drawRoads() {
+  for (var i = 0; i < ROADS.length; i++) {
+    var pts = [];
+    for (var j = 0; j < ROADS[i].pts.length; j++) pts.push({ x: gx(ROADS[i].pts[j][0]), z: gz(ROADS[i].pts[j][1]) });
+    strokeGeo(pts, 1.0, 'rgba(122,98,62,.36)');
+  }
+}
+
+/* ---------- 等高线 ---------- */
+function drawContours() {
+  var segs = CONTOURS, n = segs.length / 5;
+  if (!n) return;
+  var pass, k, a = 0, b = 1;
+  for (pass = 0; pass < 2; pass++) {
+    ctx.beginPath();
+    for (k = 0; k < n; k++) {
+      var o = k * 5, lvl = segs[o + 4];
+      var major = (Math.abs(lvl) % 2 === 0);
+      if (pass === 0 ? major : !major) continue;
+      var ax = segs[o], az = segs[o + 1], bx = segs[o + 2], bz = segs[o + 3];
+      var p1 = proj(ax, lvl + 0.04, az);
+      if (!p1.ok) continue;
+      var x1 = p1.x, y1 = p1.y;
+      var p2 = proj(bx, lvl + 0.04, bz);
+      if (!p2.ok) continue;
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(p2.x, p2.y);
+    }
+    ctx.strokeStyle = pass === 0 ? 'rgba(96,72,42,.22)' : 'rgba(110,86,52,.13)';
+    ctx.lineWidth = pass === 0 ? 1.1 : 0.9;
+    ctx.stroke();
+  }
+}
+
+/* ---------- 沙盘刻线 ---------- */
+function drawEngraving() {
+  var step = 50, i, k;
+  ctx.setLineDash([]);
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(84,62,34,.13)';
+  for (i = BX0; i <= BX1; i += step) {
+    var okAll = true, seg = [];
+    for (k = BZ0; k <= BZ1; k += 12) {
+      var p = proj(i, terrainH(i, k) + 0.12, k);
+      if (!p.ok) { okAll = false; break; }
+      seg.push([p.x, p.y]);
+    }
+    if (!okAll || seg.length < 2) continue;
+    ctx.beginPath();
+    ctx.moveTo(seg[0][0], seg[0][1]);
+    for (k = 1; k < seg.length; k++) ctx.lineTo(seg[k][0], seg[k][1]);
+    ctx.stroke();
+  }
+  for (i = BZ0; i <= BZ1; i += step) {
+    var ok2 = true, sg = [];
+    for (k = BX0; k <= BX1; k += 12) {
+      var q = proj(k, terrainH(k, i) + 0.12, i);
+      if (!q.ok) { ok2 = false; break; }
+      sg.push([q.x, q.y]);
+    }
+    if (!ok2 || sg.length < 2) continue;
+    ctx.beginPath();
+    ctx.moveTo(sg[0][0], sg[0][1]);
+    for (k = 1; k < sg.length; k++) ctx.lineTo(sg[k][0], sg[k][1]);
+    ctx.stroke();
+  }
+  var corners = [[BX0, BZ0], [BX1, BZ0], [BX1, BZ1], [BX0, BZ1], [BX0, BZ0]];
+  ctx.beginPath();
+  for (var c = 0; c < corners.length; c++) {
+    var pc = proj(corners[c][0], 0.2, corners[c][1]);
+    if (!pc.ok) return;
+    if (c === 0) ctx.moveTo(pc.x, pc.y); else ctx.lineTo(pc.x, pc.y);
+  }
+  ctx.strokeStyle = 'rgba(74,52,28,.42)';
+  ctx.lineWidth = 1.6;
+  ctx.stroke();
+}
+
+/* ---------- 地名 ---------- */
+function drawPlaces() {
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (var i = 0; i < PLACES.length; i++) {
+    var pl = PLACES[i];
+    var x = gx(pl.lng), z = gz(pl.lat);
+    var p = proj(x, terrainH(x, z) + 0.4, z);
+    if (!p.ok) continue;
+    var sz = p.s;
+    if (sz < 1.2) continue;
+    var dotR = pl.t === 'city' ? Math.max(2.2, sz * 0.55) : Math.max(1.4, sz * 0.36);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, dotR, 0, 6.2832);
+    ctx.fillStyle = pl.t === 'zone' ? 'rgba(120,66,40,.5)' : 'rgba(44,30,18,.72)';
+    ctx.fill();
+    if (pl.t === 'city') {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, dotR * 2.1, 0, 6.2832);
+      ctx.strokeStyle = 'rgba(44,30,18,.35)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    var fs = clamp(sz * 1.5, 9.5, 13.5);
+    ctx.font = '600 ' + fs.toFixed(1) + 'px "Songti SC","SimSun",serif';
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(238,228,202,.72)';
+    ctx.strokeText(pl.n, p.x, p.y - fs * 0.95);
+    ctx.fillStyle = 'rgba(46,32,18,.92)';
+    ctx.fillText(pl.n, p.x, p.y - fs * 0.95);
+  }
+}
+
+/* ---------- 合围圈 ---------- */
+function drawRings() {
+  var day = state.day;
+  for (var i = 0; i < RINGS.length; i++) {
+    var r = RINGS[i];
+    if (day < r.from) continue;
+    var pr = clamp((day - r.from) / (r.to - r.from), 0, 1);
+    var rad = lerp(r.r0, r.r1, ease(pr));
+    var done = day >= r.to - 0.05;
+    var cxw = gx(r.lng), czw = gz(r.lat);
+    var ptsX = [], ptsY = [], cnt = 0;
+    for (var k = 0; k <= 72; k++) {
+      var a = (k / 72) * 6.2832;
+      var wx = cxw + Math.cos(a) * rad, wz = czw + Math.sin(a) * rad * 0.92;
+      var p = proj(wx, terrainH(wx, wz) + 0.3, wz);
+      if (!p.ok) { cnt = -9999; break; }
+      ptsX.push(p.x); ptsY.push(p.y);
+    }
+    if (cnt === -9999) continue;
+    var pulse = 0.55 + 0.45 * Math.sin(now * 0.0022 + i);
+    ctx.beginPath();
+    ctx.moveTo(ptsX[0], ptsY[0]);
+    for (var q = 1; q < ptsX.length; q++) ctx.lineTo(ptsX[q], ptsY[q]);
+    ctx.closePath();
+    ctx.fillStyle = done ? 'rgba(38,24,14,.30)' : 'rgba(184,51,42,' + (0.07 + 0.05 * pulse) + ')';
+    ctx.fill();
+    ctx.setLineDash(done ? [] : [9, 7]);
+    ctx.lineDashOffset = -now * 0.018;
+    ctx.lineWidth = done ? 1.4 : 2.2;
+    ctx.strokeStyle = done ? 'rgba(70,46,26,.55)' : 'rgba(214,74,56,' + (0.55 + 0.3 * pulse) + ')';
+    ctx.stroke();
+    ctx.setLineDash([]);
+    if (done) {
+      var cp = proj(cxw, terrainH(cxw, czw) + 2.5, czw);
+      if (cp.ok) {
+        var ss = clamp(cp.s * 2.6, 9, 20);
+        ctx.strokeStyle = 'rgba(150,42,34,.75)';
+        ctx.lineWidth = Math.max(1.4, ss * 0.16);
+        ctx.beginPath();
+        ctx.moveTo(cp.x - ss * 0.5, cp.y - ss * 0.5); ctx.lineTo(cp.x + ss * 0.5, cp.y + ss * 0.5);
+        ctx.moveTo(cp.x + ss * 0.5, cp.y - ss * 0.5); ctx.lineTo(cp.x - ss * 0.5, cp.y + ss * 0.5);
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+/* ---------- 进攻箭头 ---------- */
+function drawArrows() {
+  var day = state.day;
+  for (var i = 0; i < ARROWS.length; i++) {
+    var a = ARROWS[i];
+    if (day < a.d0 - 0.2 || day > a.d1 + 2.5) continue;
+    var grow = clamp((day - a.d0) / Math.max(0.4, a.d1 - a.d0), 0, 1);
+    var fade = clamp((a.d1 + 2.5 - day) / 2.5, 0, 1);
+    if (grow <= 0.02) continue;
+    var isPla = a.side === 'pla';
+    var col = isPla ? '208,64,48' : '88,132,178';
+    var ax = gx(a.from[0]), az = gz(a.from[1]), bx = gx(a.to[0]), bz = gz(a.to[1]);
+    var mx = (ax + bx) / 2 + (bz - az) * 0.16, mz = (az + bz) / 2 - (bx - ax) * 0.16;
+    var S = [], n = 22, q;
+    for (q = 0; q <= n; q++) {
+      var t = (q / n) * grow;
+      var it = 1 - t;
+      var wx = it * it * ax + 2 * it * t * mx + t * t * bx;
+      var wz = it * it * az + 2 * it * t * mz + t * t * bz;
+      var p = proj(wx, terrainH(wx, wz) + 1.9, wz);
+      if (!p.ok) { S = []; break; }
+      S.push([p.x, p.y, p.s]);
+    }
+    if (S.length < 3) continue;
+    var alpha = (0.55 + 0.35 * grow) * fade;
+    ctx.lineCap = 'round';
+    ctx.setLineDash([11, 8]);
+    ctx.lineDashOffset = -now * 0.035;
+    ctx.beginPath();
+    ctx.moveTo(S[0][0], S[0][1]);
+    for (q = 1; q < S.length; q++) ctx.lineTo(S[q][0], S[q][1]);
+    ctx.strokeStyle = 'rgba(' + col + ',' + (alpha * 0.30) + ')';
+    ctx.lineWidth = clamp(S[S.length - 1][2] * 2.6, 5, 22);
+    ctx.stroke();
+    ctx.lineDashOffset = -now * 0.035;
+    ctx.strokeStyle = 'rgba(' + col + ',' + alpha + ')';
+    ctx.lineWidth = clamp(S[S.length - 1][2] * 0.75, 1.8, 6.5);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    var h1 = S[S.length - 1], h0 = S[S.length - 2];
+    var ang = Math.atan2(h1[1] - h0[1], h1[0] - h0[0]);
+    var hs = clamp(h1[2] * 2.2, 6, 19);
+    ctx.beginPath();
+    ctx.moveTo(h1[0], h1[1]);
+    ctx.lineTo(h1[0] - Math.cos(ang - 0.42) * hs, h1[1] - Math.sin(ang - 0.42) * hs);
+    ctx.lineTo(h1[0] - Math.cos(ang) * hs * 0.45, h1[1] - Math.sin(ang) * hs * 0.45);
+    ctx.lineTo(h1[0] - Math.cos(ang + 0.42) * hs, h1[1] - Math.sin(ang + 0.42) * hs);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(' + col + ',' + Math.min(1, alpha + 0.15) + ')';
+    ctx.fill();
+    if (a.label && grow > 0.55) {
+      var la = clamp((grow - 0.55) / 0.45, 0, 1) * fade;
+      var lf = clamp(h1[2] * 1.7, 9, 13);
+      ctx.font = '600 ' + lf.toFixed(1) + 'px "Songti SC","SimSun",serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      var lx = h1[0], ly = h1[1] - hs * 1.15;
+      ctx.lineWidth = 3.4;
+      ctx.strokeStyle = 'rgba(250,242,222,' + (0.72 * la) + ')';
+      ctx.strokeText(a.label, lx, ly);
+      ctx.fillStyle = 'rgba(' + col + ',' + la + ')';
+      ctx.fillText(a.label, lx, ly);
+    }
+  }
+}
+
+/* ---------- 部队 ---------- */
+function unitColor(u) {
+  if (u.rebel) return ['#c08a2e', '#7a5313'];
+  if (u.side === 'pla') return ['#c0392b', '#84190f'];
+  return ['#34638f', '#1b3a57'];
+}
+
+function drawUnits() {
+  var day = state.day;
+  var list = [];
+  for (var i = 0; i < UNITS.length; i++) {
+    var u = UNITS[i];
+    if (u.layer > state.revealed) continue;
+    var pos = unitPos(u, day);
+    var x = gx(pos.lng), z = gz(pos.lat);
+    var p = proj(x, terrainH(x, z) + 0.35, z);
+    if (!p.ok) continue;
+    var dead = WIPED[u.id] !== undefined && day >= WIPED[u.id];
+    var reb = REBEL[u.id] !== undefined && day >= REBEL[u.id];
+    list.push({ u: u, x: p.x, y: p.y, s: p.s, d: p.d, dead: dead, reb: reb, lng: pos.lng, lat: pos.lat });
+  }
+  list.sort(function (a, b) { return b.d - a.d; });
+  layoutUnits(list);
+  pickUnits.length = 0;
+  for (var k = 0; k < list.length; k++) drawUnitOne(list[k]);
+}
+
+/* 标签避让：从近到远占位，重叠则向上挪一格 */
+function layoutUnits(list) {
+  var placed = [];
+  for (var i = list.length - 1; i >= 0; i--) {
+    var it = list[i];
+    if (it.dead || it.reb) { it.plate = null; continue; }
+    var sz = clamp(it.s * 12, 21, 50);
+    var fs = clamp(sz * 0.30, 8.5, 13.5);
+    var parts = unitParts(it.u);
+    ctx.font = '700 ' + fs.toFixed(1) + 'px "Songti SC","SimSun",serif';
+    var tw = ctx.measureText(parts.main).width;
+    ctx.font = '600 ' + (fs * 0.62).toFixed(1) + 'px "Songti SC","SimSun",serif';
+    var tw2 = ctx.measureText(parts.pre).width;
+    var pw = Math.max(sz * 0.92, tw + fs * 1.5, tw2 + fs * 1.1);
+    var ph = parts.pre ? fs * 2.18 : fs * 1.66;
+    var label = parts.main;
+    var cx = clamp(it.x, pw / 2 + 10, VW - pw / 2 - 10);
+    var cy = it.y - sz * 0.62 - ph / 2;
+    var off = 0, dx = 0, okPos = false;
+    for (var t = 0; t < 26; t++) {
+      var rx = cx + dx - pw / 2 - 3, ry = cy + off - ph / 2 - 3;
+      var clash = false;
+      for (var k = 0; k < placed.length; k++) {
+        var o = placed[k];
+        if (rx < o.x + o.w && rx + pw + 6 > o.x && ry < o.y + o.h && ry + ph + 6 > o.y) { clash = true; break; }
+      }
+      if (!clash) { okPos = true; break; }
+      if (t % 4 === 3) { off -= ph * 0.98; dx = 0; }
+      else {
+        var step = Math.ceil((t + 1) / 2) * (pw * 0.52);
+        dx = (t % 2 === 0 ? 1 : -1) * step;
+        if (cx + dx < pw / 2 + 8 || cx + dx > VW - pw / 2 - 8) dx = 0;
+      }
+    }
+    if (!okPos) { off -= ph * 0.98; }
+    if (cy + off - ph / 2 < 12) off += 12 - (cy + off - ph / 2);
+    it.plate = { cx: cx + dx, cy: cy + off, pw: pw, ph: ph, sz: sz, fs: fs, label: label };
+    placed.push({ x: cx + dx - pw / 2 - 3, y: cy + off - ph / 2 - 3, w: pw + 6, h: ph + 6 });
+  }
+}
+
+function drawUnitOne(it) {
+  var u = it.u, s = it.s;
+  var sz = clamp(s * 12, 21, 50);
+  var sel = state.selectedUnit === u.id;
+  var hov = state.hover === u.id;
+
+  if (it.dead || it.reb) {
+    var rr = Math.max(4, sz * 0.22);
+    ctx.beginPath();
+    ctx.arc(it.x, it.y, rr, 0, 6.2832);
+    ctx.fillStyle = it.reb ? 'rgba(190,142,52,.85)' : 'rgba(46,30,18,.78)';
+    ctx.fill();
+    ctx.strokeStyle = it.reb ? 'rgba(255,232,180,.8)' : 'rgba(210,180,140,.5)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    if (!it.reb) {
+      ctx.beginPath();
+      ctx.moveTo(it.x - rr * 0.5, it.y - rr * 0.5); ctx.lineTo(it.x + rr * 0.5, it.y + rr * 0.5);
+      ctx.moveTo(it.x + rr * 0.5, it.y - rr * 0.5); ctx.lineTo(it.x - rr * 0.5, it.y + rr * 0.5);
+      ctx.strokeStyle = 'rgba(228,196,160,.75)';
+      ctx.lineWidth = 1.3;
+      ctx.stroke();
+    }
+    var fsz = clamp(sz * 0.42, 8.5, 11);
+    ctx.font = '600 ' + fsz.toFixed(1) + 'px "Songti SC","SimSun",serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    var tx = it.reb ? '起义' : '被歼';
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(240,230,205,.65)';
+    ctx.strokeText(tx, it.x, it.y + rr + fsz * 0.9);
+    ctx.fillStyle = it.reb ? 'rgba(126,88,26,.95)' : 'rgba(54,36,20,.92)';
+    ctx.fillText(tx, it.x, it.y + rr + fsz * 0.9);
+    pickUnits.push({ x: it.x, y: it.y, w: sz * 0.7, h: sz * 0.7, id: u.id });
+    if (sel || hov) ringMarker(it.x, it.y, sz * 0.75, sel);
+    return;
+  }
+
+  var pl = it.plate;
+  if (!pl) return;
+  var label = pl.label, fs = pl.fs, pw = pl.pw, ph = pl.ph, cx = pl.cx, cy = pl.cy;
+  var top = cy - ph / 2, left = cx - pw / 2;
+
+  /* 地面投影 */
+  ctx.beginPath();
+  ctx.ellipse(it.x, it.y, sz * 0.3, sz * 0.14, 0, 0, 6.2832);
+  ctx.fillStyle = 'rgba(34,20,8,.30)';
+  ctx.fill();
+  /* 旗杆 */
+  ctx.beginPath();
+  ctx.moveTo(cx, it.y - 1);
+  ctx.lineTo(cx, cy + ph / 2);
+  ctx.strokeStyle = 'rgba(48,32,18,.55)';
+  ctx.lineWidth = 1.1;
+  ctx.stroke();
+
+  if (sel || hov) {
+    var bg = ctx.createLinearGradient(it.x, it.y, cx, cy + ph / 2);
+    bg.addColorStop(0, sel ? 'rgba(255,206,132,.20)' : 'rgba(255,236,190,.09)');
+    bg.addColorStop(0.6, sel ? 'rgba(255,196,120,.09)' : 'rgba(255,236,190,.04)');
+    bg.addColorStop(1, 'rgba(255,220,150,0)');
+    var bw = sz * (sel ? 0.60 : 0.42);
+    ctx.beginPath();
+    ctx.moveTo(it.x - bw, it.y);
+    ctx.lineTo(it.x + bw, it.y);
+    ctx.lineTo(cx + pw * 0.22, cy + ph * 0.5);
+    ctx.lineTo(cx - pw * 0.22, cy + ph * 0.5);
+    ctx.closePath();
+    ctx.fillStyle = bg;
+    ctx.fill();
+  }
+
+  if (sel || hov) {
+    ctx.beginPath();
+    roundRect(ctx, left - 4, top - 4, pw + 8, ph + 8, 5);
+    ctx.fillStyle = sel ? 'rgba(255,226,150,.30)' : 'rgba(255,236,190,.16)';
+    ctx.fill();
+    ctx.strokeStyle = sel ? 'rgba(255,214,120,.95)' : 'rgba(250,232,190,.6)';
+    ctx.lineWidth = sel ? 1.8 : 1.1;
+    ctx.stroke();
+  }
+
+  var cols = unitColor(u);
+  var gr = ctx.createLinearGradient(left, top, left, top + ph);
+  gr.addColorStop(0, cols[0]);
+  gr.addColorStop(1, cols[1]);
+  roundRect(ctx, left, top, pw, ph, 3.5);
+  ctx.fillStyle = gr;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,242,214,.55)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(left + 2, top + 1.6);
+  ctx.lineTo(left + pw - 2, top + 1.6);
+  ctx.strokeStyle = 'rgba(255,246,222,.30)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  var parts = unitParts(u);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = '700 ' + fs.toFixed(1) + 'px "Songti SC","SimSun",serif';
+  ctx.fillStyle = '#fdf1d8';
+  if (!parts.pre) {
+    ctx.fillText(parts.main, cx, cy + fs * 0.04);
+  } else {
+    ctx.fillText(parts.main, cx, cy - fs * 0.34);
+    ctx.beginPath();
+    ctx.moveTo(left + pw * 0.18, cy + fs * 0.2);
+    ctx.lineTo(left + pw * 0.82, cy + fs * 0.2);
+    ctx.strokeStyle = 'rgba(255,242,214,.28)';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+    ctx.font = '600 ' + (fs * 0.62).toFixed(1) + 'px "Songti SC","SimSun",serif';
+    ctx.fillStyle = 'rgba(253,241,216,.78)';
+    ctx.fillText(parts.pre, cx, cy + fs * 0.62);
+  }
+
+  pickUnits.push({ x: left, y: top, w: pw, h: ph, id: u.id });
+
+  /* 悬停情报条：此刻这支部队在做什么 */
+  if (hov && !sel) {
+    var stt = statusOf(u, state.day) || '待命';
+    if (stt.length > 20) stt = stt.slice(0, 20) + '…';
+    var cf = clamp(fs * 0.8, 8.5, 11.5);
+    ctx.font = '500 ' + cf.toFixed(1) + 'px "Songti SC","SimSun",serif';
+    var tw = ctx.measureText(stt).width;
+    var chy = top - cf * 1.9;
+    ctx.beginPath();
+    roundRect(ctx, cx - tw / 2 - 8, chy - cf * 0.86, tw + 16, cf * 1.72, 4);
+    ctx.fillStyle = 'rgba(16,11,6,.88)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(200,166,86,.42)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(240,220,182,.96)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(stt, cx, chy + 0.5);
+  }
+
+  if (s > 4.4) {
+    var sub = u.kind;
+    var sf = clamp(fs * 0.72, 8, 11);
+    ctx.font = '500 ' + sf.toFixed(1) + 'px "Songti SC","SimSun",serif';
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(245,236,214,.55)';
+    ctx.strokeText(sub, it.x, it.y + sf * 1.5);
+    ctx.fillStyle = 'rgba(58,40,22,.86)';
+    ctx.fillText(sub, it.x, it.y + sf * 1.5);
+  }
+}
+
+function ringMarker(x, y, r, strong) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, 6.2832);
+  ctx.strokeStyle = strong ? 'rgba(255,214,120,.95)' : 'rgba(250,232,190,.65)';
+  ctx.lineWidth = strong ? 2 : 1.2;
+  ctx.setLineDash(strong ? [4, 3] : []);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+/* ---------- 炮火 ---------- */
+function drawBarrage(t) {
+  var day = state.day;
+  for (var i = 0; i < BARRAGE.length; i++) {
+    var b = BARRAGE[i];
+    if (day < b.from || day > b.to) continue;
+    var bx = gx(b.lng), bz = gz(b.lat);
+    for (var k = 0; k < 4; k++) {
+      var ph = (t * 0.0011 * b.rate + k * 0.27) % 1;
+      var seed = Math.floor(t * 0.0011 * b.rate + k * 0.27);
+      var ang = hash2(seed * 1.7 + k * 3.1, b.lat * 9.3) * 6.2832;
+      var rr = Math.sqrt(hash2(seed * 2.3 + k, b.lng * 5.7)) * b.r;
+      var wx = bx + Math.cos(ang) * rr, wz = bz + Math.sin(ang) * rr;
+      var p = proj(wx, terrainH(wx, wz) + 0.6, wz);
+      if (!p.ok) continue;
+      var rad = (3 + 26 * ph) * (p.s / 3.4);
+      var a = (1 - ph) * 0.7;
+      var g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, Math.max(2, rad));
+      g.addColorStop(0, 'rgba(255,236,186,' + a + ')');
+      g.addColorStop(0.35, 'rgba(240,150,60,' + (a * 0.75) + ')');
+      g.addColorStop(1, 'rgba(180,60,30,0)');
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, Math.max(2, rad), 0, 6.2832);
+      ctx.fillStyle = g;
+      ctx.fill();
+      if (ph > 0.55) {
+        var sg = (ph - 0.55) / 0.45;
+        ctx.strokeStyle = 'rgba(255,214,150,' + (0.35 * (1 - sg)) + ')';
+        ctx.lineWidth = 1;
+        for (var q = 0; q < 5; q++) {
+          var sa = hash2(seed * 4.1 + q, b.lng * 3.3) * 6.2832;
+          var sl = (6 + 16 * sg) * (p.s / 3.4);
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p.x + Math.cos(sa) * sl, p.y + Math.sin(sa) * sl * 0.55);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+}
+
+/* ---------- 故事标记 ---------- */
+function drawStories(t) {
+  pickStories.length = 0;
+  var near = cam.dist < 252;
+  for (var i = 0; i < STORIES.length; i++) {
+    var st = STORIES[i];
+    var x = gx(st.lng), z = gz(st.lat);
+    var p = proj(x, terrainH(x, z) + 0.6, z);
+    if (!p.ok) continue;
+    var found = !!state.found[st.id];
+    var s = p.s;
+    if (!near && !found) continue;
+    var base = clamp(s * 2.2, 7, 15);
+    var pulse = 0.5 + 0.5 * Math.sin(t * 0.003 + i * 1.3);
+    if (!found) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, base * (1.6 + pulse * 1.1), 0, 6.2832);
+      ctx.strokeStyle = 'rgba(240,196,110,' + (0.42 * (1 - pulse * 0.55)) + ')';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, base * 0.75, 0, 6.2832);
+      ctx.fillStyle = 'rgba(226,178,86,' + (0.65 + 0.3 * pulse) + ')';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,246,214,.85)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.font = '700 ' + Math.max(9, base * 1.15).toFixed(1) + 'px "Songti SC",serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'rgba(52,34,14,.9)';
+      ctx.fillText('?', p.x, p.y + 0.5);
+    } else {
+      var rr = base * 0.62;
+      ctx.beginPath();
+      roundRect(ctx, p.x - rr, p.y - rr, rr * 2, rr * 2, 2.4);
+      ctx.fillStyle = 'rgba(174,44,32,.85)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,232,196,.8)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.font = '700 ' + (rr * 1.35).toFixed(1) + 'px "Songti SC",serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'rgba(255,240,214,.95)';
+      ctx.fillText('忆', p.x, p.y + 0.5);
+    }
+    if (state.selectedStory === st.id) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, base * 1.9, 0, 6.2832);
+      ctx.strokeStyle = 'rgba(255,226,150,.9)';
+      ctx.lineWidth = 1.6;
+      ctx.setLineDash([3, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    pickStories.push({ x: p.x, y: p.y, r: Math.max(13, base * 1.9), id: st.id });
+  }
+}
+
+/* ---------- 指北针与比例尺 ---------- */
+function drawCompass() {
+  var cx0 = VW - 74, cy0 = VH - 196;
+  if (VW < 700) cy0 = VH - 210;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx0, cy0, 30, 0, 6.2832);
+  ctx.fillStyle = 'rgba(14,10,6,.55)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(200,166,86,.3)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  var p0 = proj(cam.tx, 0, cam.tz);
+  var a0x = p0.x, a0y = p0.y, a0ok = p0.ok;
+  var p1 = proj(cam.tx, 0, cam.tz - 40);
+  var a1x = p1.x, a1y = p1.y, a1ok = p1.ok;
+  var ang = -Math.PI / 2;
+  if (a0ok && a1ok) ang = Math.atan2(a1y - a0y, a1x - a0x);
+  ctx.translate(cx0, cy0);
+  ctx.rotate(ang + Math.PI / 2);
+  ctx.beginPath();
+  ctx.moveTo(0, -21);
+  ctx.lineTo(5.5, 6);
+  ctx.lineTo(0, 1.5);
+  ctx.lineTo(-5.5, 6);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(214,74,56,.9)';
+  ctx.fill();
+  ctx.font = '700 9px "Songti SC",serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(226,208,170,.85)';
+  ctx.fillText('北', 0, -25);
+  ctx.restore();
+
+  var km = cam.dist > 260 ? 100 : cam.dist > 130 ? 50 : 20;
+  var pp = proj(cam.tx, 0, cam.tz);
+  var sc = pp.ok ? pp.s : 2;
+  var px = km * sc;
+  var bx = VW - 74 - px / 2, by = cy0 + 46;
+  ctx.beginPath();
+  ctx.moveTo(bx, by); ctx.lineTo(bx + px, by);
+  ctx.moveTo(bx, by - 4); ctx.lineTo(bx, by + 4);
+  ctx.moveTo(bx + px, by - 4); ctx.lineTo(bx + px, by + 4);
+  ctx.strokeStyle = 'rgba(226,208,170,.6)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.font = '500 9.5px "DIN Alternate",monospace';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(200,180,146,.8)';
+  ctx.fillText(km + ' km', bx + px / 2, by + 14);
+}
+
+/* ============================================================
+   沉浸层：天光 / 大气 / 雪 / 音场 / 镜头 / 叙事
+   ============================================================ */
+
+/* ---------- 颜色 ---------- */
+function hx(h) {
+  h = h.replace('#', '');
+  return [parseInt(h.substr(0, 2), 16), parseInt(h.substr(2, 2), 16), parseInt(h.substr(4, 2), 16)];
+}
+function mix3(a, b, t) { return [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)]; }
+function rc(c, a) {
+  return 'rgba(' + Math.round(c[0]) + ',' + Math.round(c[1]) + ',' + Math.round(c[2]) +
+    ',' + (a === undefined ? 1 : a) + ')';
+}
+
+/* 三个天色基调：初冬黄昏 → 阴冷 → 雪夜 */
+var SKY_WARM  = { top: hx('#231a14'), mid: hx('#6b4a35'), low: hx('#b5794b'), fog: hx('#c9a884'), sun: hx('#ffc184') };
+var SKY_COLD  = { top: hx('#121a24'), mid: hx('#39464f'), low: hx('#78878c'), fog: hx('#9faaab'), sun: hx('#cfdbe0') };
+var SKY_NIGHT = { top: hx('#070c14'), mid: hx('#16202e'), low: hx('#33465a'), fog: hx('#6f849a'), sun: hx('#a9bed4') };
+
+var skyCur = { top: [0, 0, 0], mid: [0, 0, 0], low: [0, 0, 0], fog: [0, 0, 0], sun: [0, 0, 0] };
+function skyNow() {
+  var t = clamp(state.day / (CAMPAIGN.days - 1), 0, 1);
+  var A, B, k;
+  if (t < 0.42) { A = SKY_WARM; B = SKY_COLD; k = t / 0.42; }
+  else { A = SKY_COLD; B = SKY_NIGHT; k = (t - 0.42) / 0.58; }
+  k = smooth(clamp(k, 0, 1));
+  skyCur.top = mix3(A.top, B.top, k);
+  skyCur.mid = mix3(A.mid, B.mid, k);
+  skyCur.low = mix3(A.low, B.low, k);
+  skyCur.fog = mix3(A.fog, B.fog, k);
+  skyCur.sun = mix3(A.sun, B.sun, k);
+  return skyCur;
+}
+
+/* ---------- 地平线 ---------- */
+var HZN = { y: -1, on: false };
+function horizonNow() {
+  var p = proj(cam.tx + bF.x * 2600, 0, cam.tz + bF.z * 2600);
+  HZN.on = p.ok && bF.y < -0.001;
+  HZN.y = HZN.on ? p.y : VH * 2;
+}
+
+/* ---------- 天空穹顶 ---------- */
+function drawSky(t) {
+  horizonNow();
+  var fade = clamp((0.40 - cam.pol) / 0.20, 0, 1);
+  if (fade <= 0.02 || !HZN.on || HZN.y > VH * 1.35) return;
+  var sk = skyNow();
+  ctx.save();
+  ctx.globalAlpha = fade;
+
+  var gy = HZN.y - VH * 0.55;
+  var g = ctx.createLinearGradient(0, gy, 0, HZN.y);
+  g.addColorStop(0, rc(sk.top));
+  g.addColorStop(0.58, rc(sk.mid));
+  g.addColorStop(1, rc(sk.low));
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, VW, Math.max(0, HZN.y));
+
+  /* 云层 */
+  var i;
+  for (i = 0; i < 6; i++) {
+    var cy = HZN.y - VH * (0.05 + 0.235 * (i / 6)) - Math.sin(t * 0.00004 + i) * 4;
+    var cw = VW * (0.52 + 0.5 * hash2(i * 7.3, 11.1));
+    var cx0 = ((t * 0.000016 + i * 0.37) % 1.4 - 0.2) * VW;
+    var al = (0.05 + 0.05 * hash2(i * 3.1, 5.5)) * (1 - i / 7);
+    var cg = ctx.createLinearGradient(0, cy - VH * 0.07, 0, cy + VH * 0.07);
+    cg.addColorStop(0, rc(sk.fog, 0));
+    cg.addColorStop(0.5, rc(sk.fog, al));
+    cg.addColorStop(1, rc(sk.fog, 0));
+    ctx.fillStyle = cg;
+    ctx.beginPath();
+    ctx.ellipse(cx0, cy, cw, VH * 0.06, 0, 0, 6.2832);
+    ctx.fill();
+  }
+
+  /* 日轮 / 月轮 */
+  var relAz = 1.15 - cam.az;
+  var spx = VW * 0.5 + Math.sin(relAz) * VW * 0.36;
+  var spy = HZN.y - VH * (0.15 + 0.06 * Math.cos(relAz));
+  var sr = VH * 0.042;
+  var sg = ctx.createRadialGradient(spx, spy, 0, spx, spy, sr * 4.4);
+  sg.addColorStop(0, rc(sk.sun, 0.5));
+  sg.addColorStop(0.26, rc(sk.sun, 0.2));
+  sg.addColorStop(1, rc(sk.sun, 0));
+  ctx.beginPath(); ctx.arc(spx, spy, sr * 4.4, 0, 6.2832);
+  ctx.fillStyle = sg; ctx.fill();
+  ctx.beginPath(); ctx.arc(spx, spy, sr, 0, 6.2832);
+  ctx.fillStyle = rc(sk.sun, 0.5); ctx.fill();
+
+  /* 星 */
+  var night = clamp((state.day / 65 - 0.52) / 0.48, 0, 1);
+  if (night > 0.06) {
+    for (i = 0; i < 90; i++) {
+      var sx = hash2(i * 9.1, 2.3) * VW;
+      var sy = hash2(i * 4.7, 8.9) * Math.max(1, HZN.y - VH * 0.09);
+      var tw = 0.45 + 0.55 * Math.sin(t * 0.0013 + i * 1.7);
+      ctx.fillStyle = 'rgba(222,232,246,' + (night * 0.5 * tw) + ')';
+      ctx.fillRect(sx, sy, 1.2, 1.2);
+    }
+  }
+
+  /* 地平线以远的雾面（避免沙盘外露出虚空） */
+  var fg = ctx.createLinearGradient(0, HZN.y, 0, HZN.y + VH * 0.16);
+  fg.addColorStop(0, rc(sk.fog, 0.16));
+  fg.addColorStop(0.42, rc(sk.fog, 0.72));
+  fg.addColorStop(1, rc(sk.fog, 0.97));
+  ctx.fillStyle = fg;
+  ctx.fillRect(0, Math.max(0, HZN.y - VH * 0.02), VW, VH - Math.max(0, HZN.y - VH * 0.02));
+  ctx.restore();
+}
+
+/* ---------- 大气雾（盖在地形上，制造纵深） ---------- */
+function drawHaze() {
+  if (!HZN.on) return;
+  var fade = clamp((0.44 - cam.pol) / 0.24, 0, 1);
+  if (fade <= 0.02) return;
+  var sk = skyNow();
+  var y0 = HZN.y - VH * 0.34, y1 = HZN.y + VH * 0.55;
+  var a = 0.27 * fade;
+  var g = ctx.createLinearGradient(0, y0, 0, y1);
+  g.addColorStop(0, rc(sk.fog, 0));
+  g.addColorStop(0.52, rc(sk.fog, a));
+  g.addColorStop(1, rc(sk.fog, a * 0.32));
+  ctx.fillStyle = g;
+  ctx.fillRect(0, Math.max(0, y0), VW, VH - Math.max(0, y0));
+}
+
+/* ---------- 雪 ---------- */
+var SNOW_P = [];
+function snowInit() {
+  SNOW_P.length = 0;
+  var n = Math.round(clamp(VW * VH / 5200, 170, 440));
+  for (var i = 0; i < n; i++) {
+    SNOW_P.push({
+      x: Math.random() * VW, y: Math.random() * VH,
+      r: 0.9 + Math.random() * 2.4, v: 0.45 + Math.random() * 1.5,
+      z: Math.random(), ph: Math.random() * 6.2832
+    });
+  }
+}
+function drawSnow(t, dtt) {
+  var amt = clamp((state.day - 34) / 12, 0, 1);
+  if (amt <= 0.01) return;
+  var fade = clamp((0.58 - cam.pol) / 0.32, 0.42, 1);
+  var wind = Math.sin(t * 0.00024) * 30 + Math.sin(t * 0.0007) * 10;
+  var floorY = VH + 8;
+  var i, p;
+  for (i = 0; i < SNOW_P.length; i++) {
+    p = SNOW_P[i];
+    p.y += p.v * dtt * 60 * (0.55 + p.z);
+    p.x += wind * dtt * 0.45 + Math.sin(t * 0.0008 + p.ph) * 9 * dtt;
+    if (p.y > floorY) { p.y = floorY - Math.random() * 26 - 2; p.x = Math.random() * VW; }
+    if (p.x > VW + 14) p.x -= VW + 28;
+    if (p.x < -14) p.x += VW + 28;
+  }
+  ctx.save();
+  /* 远雪：一次性批量矩形 */
+  ctx.fillStyle = 'rgba(226,238,248,' + (0.34 * amt * fade) + ')';
+  ctx.beginPath();
+  for (i = 0; i < SNOW_P.length; i++) {
+    p = SNOW_P[i];
+    if (p.z > 0.55) continue;
+    ctx.rect(p.x, p.y, p.r * 0.7, p.r * 0.7);
+  }
+  ctx.fill();
+  /* 近雪 */
+  ctx.fillStyle = 'rgba(240,248,255,' + (0.62 * amt * fade) + ')';
+  ctx.beginPath();
+  for (i = 0; i < SNOW_P.length; i++) {
+    p = SNOW_P[i];
+    if (p.z <= 0.55) continue;
+    ctx.rect(p.x, p.y, p.r, p.r);
+  }
+  ctx.fill();
+  ctx.restore();
+}
+
+/* ---------- 胶片颗粒（DOM 层，零逐帧成本） ---------- */
+function initGrain() {
+  var c = document.createElement('canvas');
+  c.width = 140; c.height = 140;
+  var g = c.getContext('2d');
+  var im = g.createImageData(140, 140);
+  for (var i = 0; i < im.data.length; i += 4) {
+    var v = Math.random();
+    im.data[i] = im.data[i + 1] = im.data[i + 2] = v > 0.5 ? 255 : 0;
+    im.data[i + 3] = Math.round(Math.abs(v - 0.5) * 2 * 48);
+  }
+  g.putImageData(im, 0, 0);
+  var el = document.getElementById('grain');
+  if (el) {
+    el.style.backgroundImage = 'url(' + c.toDataURL() + ')';
+    el.style.backgroundSize = '140px 140px';
+  }
+}
+
+/* ---------- 音场（纯合成，无外部音频文件） ---------- */
+var AU = { ctx: null, master: null, wind: null, ready: false, on: true, nextBoom: 0 };
+
+function auInit() {
+  if (AU.ctx) {
+    if (AU.ctx.state === 'suspended' && AU.on) AU.ctx.resume();
+    return;
+  }
+  var C = window.AudioContext || window.webkitAudioContext;
+  if (!C) return;
+  try {
+    AU.ctx = new C();
+  } catch (e) { return; }
+  AU.master = AU.ctx.createGain();
+  AU.master.gain.value = 0.85;
+  AU.master.connect(AU.ctx.destination);
+
+  /* 风：棕噪声 + 低通 */
+  var len = Math.floor(AU.ctx.sampleRate * 3);
+  var buf = AU.ctx.createBuffer(1, len, AU.ctx.sampleRate);
+  var d = buf.getChannelData(0);
+  var last = 0;
+  for (var i = 0; i < len; i++) {
+    last = last * 0.93 + (Math.random() * 2 - 1) * 0.075;
+    d[i] = last * 3.2;
+  }
+  var src = AU.ctx.createBufferSource();
+  src.buffer = buf;
+  src.loop = true;
+  var lp = AU.ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.value = 430; lp.Q.value = 0.5;
+  var g = AU.ctx.createGain();
+  g.gain.value = 0.03;
+  src.connect(lp); lp.connect(g); g.connect(AU.master);
+  src.start();
+  AU.wind = g;
+  AU.ready = true;
+}
+
+function auBoom(level) {
+  if (!AU.ready || !AU.on) return;
+  var c = AU.ctx, t0 = c.currentTime;
+  var o = c.createOscillator();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(64, t0);
+  o.frequency.exponentialRampToValueAtTime(26, t0 + 0.55);
+  var og = c.createGain();
+  og.gain.setValueAtTime(0.0001, t0);
+  og.gain.exponentialRampToValueAtTime(0.17 * level, t0 + 0.07);
+  og.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.15);
+  o.connect(og); og.connect(AU.master);
+  o.start(t0); o.stop(t0 + 1.2);
+
+  var n = c.createBuffer(1, Math.floor(c.sampleRate * 0.7), c.sampleRate);
+  var nd = n.getChannelData(0);
+  for (var i = 0; i < nd.length; i++) {
+    var k = 1 - i / nd.length;
+    nd[i] = (Math.random() * 2 - 1) * k * k;
+  }
+  var ns = c.createBufferSource();
+  ns.buffer = n;
+  var lp = c.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.value = 200;
+  var ng = c.createGain();
+  ng.gain.setValueAtTime(0.09 * level, t0);
+  ns.connect(lp); lp.connect(ng); ng.connect(AU.master);
+  ns.start(t0);
+}
+
+function auTick(t, dtt) {
+  if (!AU.ready || !AU.on || AU.ctx.state !== 'running') return;
+  var gust = 0.5 + 0.5 * Math.sin(t * 0.0004) + 0.2 * Math.sin(t * 0.0011 + 1.3);
+  AU.wind.gain.setTargetAtTime(0.026 + 0.02 * clamp(gust, 0, 1.4), AU.ctx.currentTime, 0.4);
+  var active = false;
+  for (var i = 0; i < BARRAGE.length; i++) {
+    var b = BARRAGE[i];
+    if (state.day >= b.from && state.day <= b.to) active = true;
+  }
+  if (t > AU.nextBoom) {
+    auBoom(active ? 0.55 + Math.random() * 0.45 : 0.22 + Math.random() * 0.18);
+    AU.nextBoom = t + (active ? 1600 + Math.random() * 2800 : 6000 + Math.random() * 7000);
+  }
+}
+
+function auBlip(freq, dur, vol) {
+  if (!AU.ready || !AU.on || AU.ctx.state !== 'running') return;
+  var c = AU.ctx, t0 = c.currentTime;
+  var o = c.createOscillator();
+  o.type = 'triangle';
+  o.frequency.value = freq;
+  var g = c.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol || 0.05, t0 + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + (dur || 0.06));
+  o.connect(g); g.connect(AU.master);
+  o.start(t0); o.stop(t0 + (dur || 0.06) + 0.02);
+}
+function auBeep() { auBlip(720, 0.05, 0.04); setTimeout(function () { auBlip(760, 0.05, 0.035); }, 90); }
+
+/* ---------- 镜头 ---------- */
+var spin = { vaz: 0, vpol: 0 };
+function flyTo(lng, lat, dist, pol) {
+  spin.vaz = 0; spin.vpol = 0;
+  camT.tx = gx(lng); camT.tz = gz(lat);
+  if (typeof dist === 'number') camT.dist = clamp(dist, 40, 470);
+  if (typeof pol === 'number') camT.pol = clamp(pol, 0.12, 1.34);
+}
+function groundAt(px, py) {
+  var p = proj(cam.tx, 0, cam.tz);
+  if (!p.ok || p.s <= 0.01) return null;
+  return {
+    x: clamp(cam.tx + (px - p.x) / p.s, BX0 + 8, BX1 - 8),
+    z: clamp(cam.tz + (py - p.y) / p.s, BZ0 + 8, BZ1 - 8)
+  };
+}
+
+/* ---------- 章节大字幕 ---------- */
+var Chapter = {
+  hideT: 0,
+  show: function (n) {
+    var el = document.getElementById('chapter');
+    if (!el) return;
+    var L = LAYERS[clamp(n, 1, 4) - 1];
+    var num = ['壹', '贰', '叁', '肆'][clamp(n, 1, 4) - 1];
+    el.querySelector('.ch-num').textContent = '第 ' + num + ' 章';
+    el.querySelector('.ch-name').textContent = L.short;
+    el.querySelector('.ch-date').textContent = L.date;
+    el.classList.add('on');
+    clearTimeout(this.hideT);
+    this.hideT = setTimeout(function () { el.classList.remove('on'); }, 3400);
+  }
+};
+
+/* ---------- 战地电文（逐字浮现） ---------- */
+var Narr = {
+  target: '', shown: 0, emEl: null, tEl: null, caretEl: null, date: '',
+  set: function (text, dateStr) {
+    if (this.target === text) return;
+    this.target = text || '';
+    this.date = dateStr || '';
+    this.shown = 0;
+    var host = document.getElementById('narr-text');
+    if (!host) return;
+    host.innerHTML = '<em></em><span class="nt"></span><b class="caret">▌</b>';
+    this.emEl = host.querySelector('em');
+    this.tEl = host.querySelector('.nt');
+    this.caretEl = host.querySelector('.caret');
+    if (this.emEl) this.emEl.textContent = this.date;
+    if (this.tEl) this.tEl.textContent = '';
+  },
+  tick: function (dtt) {
+    if (!this.tEl || !this.target) return;
+    if (this.shown < this.target.length) {
+      this.shown = Math.min(this.target.length, this.shown + dtt * 42);
+      this.tEl.textContent = this.target.slice(0, Math.floor(this.shown));
+    }
+    if (this.caretEl) this.caretEl.style.opacity = this.shown >= this.target.length ? '0' : '1';
+  }
+};
+
+/* ---------- 序幕 ---------- */
+var Prologue = {
+  done: false,
+  enter: function (silent) {
+    if (this.done) return;
+    this.done = true;
+    var el = document.getElementById('prologue');
+    if (el) el.classList.add('off');
+    auInit();
+    window.addEventListener('mousedown', function () { auInit(); }, { once: true });
+    var L = LAYERS[state.revealed - 1];
+    if (!silent) {
+      focusCamera(L.cam);
+      setTimeout(function () { Chapter.show(state.revealed); auBeep(); }, 900);
+    }
+  }
+};
+
+/* ---------- 终局 ---------- */
+var Ending = { done: false, prev: 0 };
+function checkEnding() {
+  var d = state.day, prev = Ending.prev;
+  Ending.prev = d;
+  if (Ending.done) return;
+  if (prev >= CAMPAIGN.days - 1.05) return;
+  if (d < CAMPAIGN.days - 1.05) return;
+  Ending.done = true;
+  state.playing = false;
+  syncPlayBtn();
+  var el = document.getElementById('memorial');
+  if (el) el.classList.add('on');
+  auBlip(190, 1.6, 0.05);
+}
+
+/* ---------- 沉浸模式 ---------- */
+function toggleCinema(force) {
+  var on = force === undefined ? !document.body.classList.contains('cinema') : force;
+  document.body.classList.toggle('cinema', on);
+  var b = document.getElementById('btn-cinema');
+  if (b) { b.classList.toggle('on', on); b.textContent = on ? '◲ 退出' : '◲ 沉浸'; }
+}
+
+/* ============================================================
+   交互与界面
+   ============================================================ */
+var $ = function (id) { return document.getElementById(id); };
+var elDateMain = $('date-main'), elDateSub = $('date-sub'), elStageName = $('stage-name');
+var elScrub = $('scrub'), elNarr = $('narration'), elNarrT = $('narr-text');
+var elUnitCard = $('unit-card'), elStoryCard = $('story-card');
+var elStoryCount = $('story-count');
+
+var lastUI = { date: '', stage: -1, revealed: 0, found: -1 };
+
+/* ---------- 相机 ---------- */
+function focusCamera(c) {
+  camT.az = c.az; camT.pol = c.pol; camT.dist = c.dist; camT.tx = c.tx; camT.tz = c.tz;
+}
+
+/* ---------- 时间 ---------- */
+function setDay(d, fromPlay) {
+  d = clamp(d, 0, CAMPAIGN.days - 1);
+  state.day = d;
+  if (!fromPlay) { state.playing = false; syncPlayBtn(); }
+  var st = stageOf(d);
+  var target = Math.min(4, st + 1);
+  if (target > state.revealed) {
+    state.revealed = target;
+    if (fromPlay) {
+      focusCamera(LAYERS[target - 1].cam);
+      Chapter.show(target);
+      auBeep();
+    }
+  }
+  elScrub.value = d;
+  updateUI();
+  checkEnding();
+}
+
+function updateUI() {
+  var d = state.day;
+  var dt = dateOf(d);
+  if (lastUI.date !== dt.md) {
+    elDateMain.textContent = dt.str;
+    lastUI.date = dt.md;
+  }
+  var st = stageOf(d);
+  if (lastUI.stage !== st) {
+    elStageName.textContent = LAYERS[st].name;
+    lastUI.stage = st;
+  }
+  elDateSub.textContent = '第 ' + dt.idx + ' 天 · ' + stageWord(d);
+
+  if (lastUI.revealed !== state.revealed) {
+    lastUI.revealed = state.revealed;
+    var btns = document.querySelectorAll('.layer');
+    for (var i = 0; i < btns.length; i++) {
+      var L = parseInt(btns[i].getAttribute('data-layer'), 10);
+      btns[i].classList.toggle('on', L === state.revealed);
+      btns[i].classList.toggle('locked', L > state.revealed);
+    }
+    $('btn-next').disabled = state.revealed >= 4;
+  }
+
+  var evText = null, evDate = null;
+  for (var k = 0; k < EVENTS.length; k++) {
+    if (d >= EVENTS[k].d - 0.05) { evText = EVENTS[k].t; evDate = EVENTS[k].d; }
+  }
+  if (evText) {
+    var dd = dateOf(evDate);
+    Narr.set(evText, dd.md);
+    elNarr.classList.add('on');
+  } else {
+    Narr.set('', '');
+    elNarr.classList.remove('on');
+  }
+
+  if (lastUI.found !== state.foundCount) {
+    lastUI.found = state.foundCount;
+    elStoryCount.textContent = '已发现 ' + state.foundCount + ' / ' + STORIES.length + ' 段战场故事';
+  }
+}
+
+function stageWord(d) {
+  if (d < 1) return '战役发起';
+  if (d < 17) return '围歼黄百韬';
+  if (d < 40) return '围歼黄维';
+  return '围歼杜聿明';
+}
+
+/* ---------- 图层 ---------- */
+function revealLayer(n) {
+  n = clamp(n, 1, 4);
+  if (n > state.revealed + 1) n = state.revealed + 1;
+  state.revealed = Math.max(state.revealed, n);
+  var L = LAYERS[n - 1];
+  focusCamera(L.cam);
+  Chapter.show(n);
+  auBeep();
+  var target = n === 1 ? 0 : n === 2 ? 4 : n === 3 ? 19 : 42;
+  state.playing = false;
+  syncPlayBtn();
+  setDay(Math.max(state.day, target));
+}
+
+/* ---------- 卡片 ---------- */
+function openUnit(id) {
+  var u = null;
+  for (var i = 0; i < UNITS.length; i++) if (UNITS[i].id === id) u = UNITS[i];
+  if (!u) return;
+  state.selectedUnit = id;
+  state.selectedStory = null;
+  closePanel('story-card');
+  $('u-kicker').textContent = u.side === 'pla' ? '人民解放军 · ' + u.kind : (u.rebel ? '起义部队 · ' + u.kind : '国民党军 · ' + u.kind);
+  $('u-name').textContent = u.name;
+  var tags = [];
+  tags.push('<span class="tag ' + (u.side === 'pla' ? 'red' : 'blue') + '">' + (u.side === 'pla' ? '人民解放军' : '国民党军') + '</span>');
+  tags.push('<span class="tag">' + u.kind + '</span>');
+  if (u.rebel) tags.push('<span class="tag gold">1948.11.8 起义</span>');
+  if (WIPED[u.id] !== undefined && state.day >= WIPED[u.id]) tags.push('<span class="tag gold">已 被 歼</span>');
+  $('u-tags').innerHTML = tags.join('');
+  var rows = [
+    ['主 官', u.cmd],
+    ['兵 力', u.str],
+    ['编制', u.num],
+    ['当前态势', statusOf(u, state.day) || '待 命'],
+    ['结 局', u.end]
+  ];
+  var h = '';
+  for (var r = 0; r < rows.length; r++) {
+    h += '<dt>' + rows[r][0] + '</dt><dd>' + rows[r][1] + '</dd>';
+  }
+  $('u-rows').innerHTML = h;
+  $('u-note').textContent = u.note || '';
+  var pos0 = unitPos(u, state.day);
+  flyTo(pos0.lng, pos0.lat, clamp(camT.dist, 112, 190));
+  auBlip(560, 0.05, 0.045);
+  elUnitCard.classList.add('open');
+  syncCards();
+}
+
+function openStory(id) {
+  var s = null;
+  for (var i = 0; i < STORIES.length; i++) if (STORIES[i].id === id) s = STORIES[i];
+  if (!s) return;
+  state.selectedStory = id;
+  state.selectedUnit = null;
+  closePanel('unit-card');
+  if (!state.found[id]) { state.found[id] = 1; state.foundCount++; }
+  $('s-name').textContent = s.title;
+  $('s-tags').innerHTML = '<span class="tag gold">' + s.date + '</span><span class="tag">' + s.place + '</span>';
+  $('s-body').innerHTML = s.body;
+  $('s-src').textContent = '出处：' + s.src;
+  auBlip(680, 0.06, 0.05);
+  elStoryCard.classList.add('open');
+  syncCards();
+  updateUI();
+}
+
+function closePanel(id) {
+  var el = $(id);
+  if (el) el.classList.remove('open');
+  if (id === 'unit-card') state.selectedUnit = null;
+  if (id === 'story-card') state.selectedStory = null;
+  syncCards();
+}
+
+function syncCards() {
+  var r = elUnitCard.classList.contains('open');
+  var l = elStoryCard.classList.contains('open');
+  document.body.classList.toggle('card-right', r);
+  document.body.classList.toggle('card-left', l);
+}
+
+/* ---------- 弹窗 ---------- */
+function showModal(title, html) {
+  $('modal-title').textContent = title;
+  $('modal-body').innerHTML = html;
+  $('modal').classList.add('on');
+}
+function hideModal() { $('modal').classList.remove('on'); }
+
+var SOURCE_ROWS = [
+  ['战役时间', '1948.11.6 — 1949.1.10', '共 66 天'],
+  ['解放军参战兵力', '约 60 万人', '华野 约 36 万、中野 约 15 万，另有 地方 部队'],
+  ['国民党军参战兵力', '约 80 万人', '徐州 "剿总" 及 华中 增援 部队'],
+  ['歼敌总数', '555,099 人', '1 个 "剿总" 前进 指挥部、5 个 兵团部、22 个 军部、56 个 师'],
+  ['第一阶段 碾庄圩', '约 17.8 万人', '含 第三绥靖区 起义 2.3 万余人（起义 不计入 歼敌）'],
+  ['第二阶段 双堆集', '约 11.8 万人', '第12兵团 及 增援 受阻 部队'],
+  ['第三阶段 陈官庄', '约 26 万人', '杜聿明 集团 3 个 兵团'],
+  ['解放军伤亡', '约 13.4 万人', '各 战史 数字 略有 出入'],
+  ['支前民工', '543 万人', '苏、鲁、豫、皖 四省'],
+  ['担架 / 大小车', '20.6 万副 / 88.1 万辆', '另有 牲畜 76.7 万头'],
+  ['筹运粮食', '9.6 亿斤', '主要 靠 人力 与 畜力 运输']
+];
+
+function showSources() {
+  var h = '<p>本沙盘 的 时间、番号、兵力 与 战果，均 以 公开 战史 与 权威 史料 为 准。以下 为 逐条 核对 表。</p>';
+  h += '<table class="tbl"><tr><th>项目</th><th>数字</th><th>口径</th></tr>';
+  for (var i = 0; i < SOURCE_ROWS.length; i++) {
+    h += '<tr><td>' + SOURCE_ROWS[i][0] + '</td><td class="n">' + SOURCE_ROWS[i][1] + '</td><td>' + SOURCE_ROWS[i][2] + '</td></tr>';
+  }
+  h += '</table>';
+  h += '<h3>三处 容易被 误传 的 细节</h3>';
+  h += '<p><b>一、"543 万 小推车" 是 两个 数字。</b>543 万 是 支前 <em>民工</em> 的 人数；大小 车（含 独轮 小车）为 88.1 万辆。两者 常 被 合并 成 "543 万 辆 小推车"，本沙盘 分开 表述。</p>';
+  h += '<p><b>二、黄百韬 的 死因 有 两说。</b>大陆 战史 通行 记载 为 兵败 后 自杀；亦有 阵亡 一说。沙盘 采 自杀 说，并 在 故事 中 注明。</p>';
+  h += '<p><b>三、位置 为 示意。</b>部队 在 沙盘 上 的 位置 按 战役 进程 逐日 推移，方位 力求 与 战史 一致，但 不是 精确 测绘；村落 级 位置 以 地名 标注 为准。</p>';
+  h += '<h3>主要 参考</h3>';
+  h += '<p>《中国人民解放军战史》第三卷（军事科学出版社）；《淮海战役》（中共党史出版社）；《淮海战役 支前 史料 选编》；《粟裕 战争 回忆录》；《杜聿明 回忆录》；淮海战役 纪念馆 展陈 资料。</p>';
+  showModal('史料与数据核对', h);
+}
+
+function showStoryIndex() {
+  var h = '<p>战场 上 藏着 ' + STORIES.length + ' 段 真实 发生 的 故事。把 镜头 推近 到 战场 上，寻找 那些 金色 的 光点。</p>';
+  h += '<div class="slist">';
+  for (var i = 0; i < STORIES.length; i++) {
+    var s = STORIES[i];
+    var on = !!state.found[s.id];
+    h += '<button class="' + (on ? '' : 'und') + '" data-story="' + s.id + '">';
+    h += '<b>' + (i + 1 < 10 ? '0' : '') + (i + 1) + '</b>';
+    h += '<span>' + (on ? s.title : '？ ？ ？') + '</span>';
+    h += '<span style="margin-left:auto;font-size:10px;color:#8b7550">' + s.date + '</span>';
+    h += '</button>';
+  }
+  h += '</div>';
+  h += '<p style="margin-top:16px;font-size:11px;color:#8b7550">已 发现 ' + state.foundCount + ' / ' + STORIES.length + '</p>';
+  showModal('故事索引', h);
+  var btns = $('modal-body').querySelectorAll('[data-story]');
+  for (var k = 0; k < btns.length; k++) {
+    btns[k].addEventListener('click', function () {
+      var sid = this.getAttribute('data-story');
+      if (!state.found[sid]) return;
+      hideModal();
+      openStory(sid);
+    });
+  }
+}
+
+/* ---------- 播放 ---------- */
+function syncPlayBtn() {
+  var b = $('btn-play');
+  b.textContent = state.playing ? '❚❚' : '▶';
+  b.classList.toggle('on', state.playing);
+  b.style.paddingLeft = state.playing ? '0' : '2px';
+}
+function togglePlay() {
+  if (!state.playing && state.day >= CAMPAIGN.days - 1.01) setDay(0);
+  state.playing = !state.playing;
+  syncPlayBtn();
+}
+
+/* ---------- 指针交互 ---------- */
+var ptrs = {}, dragging = false, moved = 0, lastPtr = null, pinch = 0;
+var px0 = 0, py0 = 0, camSaved = null, lastD = { x: 0, y: 0 };
+
+function hitTest(x, y) {
+  var i, p;
+  for (i = pickStories.length - 1; i >= 0; i--) {
+    p = pickStories[i];
+    var dx = x - p.x, dy = y - p.y;
+    if (dx * dx + dy * dy < p.r * p.r) return { type: 'story', id: p.id };
+  }
+  for (i = pickUnits.length - 1; i >= 0; i--) {
+    p = pickUnits[i];
+    if (x >= p.x && x <= p.x + p.w && y >= p.y && y <= p.y + p.h) return { type: 'unit', id: p.id };
+  }
+  return null;
+}
+
+cv.addEventListener('pointerdown', function (e) {
+  cv.setPointerCapture(e.pointerId);
+  ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+  var n = Object.keys(ptrs).length;
+  if (n === 1) {
+    dragging = true; moved = 0;
+    lastPtr = { x: e.clientX, y: e.clientY };
+    camSaved = { az: camT.az, pol: camT.pol, tx: camT.tx, tz: camT.tz };
+    px0 = e.clientX; py0 = e.clientY;
+    cv.classList.add('drag');
+  } else if (n === 2) {
+    var ks = Object.keys(ptrs);
+    pinch = Math.hypot(ptrs[ks[0]].x - ptrs[ks[1]].x, ptrs[ks[0]].y - ptrs[ks[1]].y);
+  }
+});
+
+cv.addEventListener('pointermove', function (e) {
+  if (!ptrs[e.pointerId]) {
+    if (!dragging) {
+      var h = hitTest(e.clientX, e.clientY);
+      var id = h && h.type === 'unit' ? h.id : null;
+      if (id !== state.hover) { state.hover = id; cv.style.cursor = id ? 'pointer' : 'grab'; }
+      else if (h && h.type === 'story') cv.style.cursor = 'pointer';
+    }
+    return;
+  }
+  ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+  var n = Object.keys(ptrs).length;
+  if (n >= 2) {
+    var ks = Object.keys(ptrs);
+    var nd = Math.hypot(ptrs[ks[0]].x - ptrs[ks[1]].x, ptrs[ks[0]].y - ptrs[ks[1]].y);
+    if (pinch > 0) camT.dist = clamp(camT.dist * (pinch / Math.max(1, nd)), 55, 480);
+    pinch = nd;
+    return;
+  }
+  if (!dragging || !lastPtr) return;
+  var dx = e.clientX - lastPtr.x, dy = e.clientY - lastPtr.y;
+  moved += Math.abs(dx) + Math.abs(dy);
+  lastPtr = { x: e.clientX, y: e.clientY };
+  if (e.shiftKey || e.buttons === 2) {
+    panCamera(dx, dy);
+  } else {
+    camT.az = camSaved.az - dx * 0.006;
+    camT.pol = clamp(camSaved.pol + dy * 0.004, 0.12, 1.34);
+    lastD.x = dx; lastD.y = dy;
+  }
+});
+
+function panCamera(dx, dy) {
+  var sp = Math.sin(camT.az), cp = Math.cos(camT.az);
+  var k = camT.dist * 0.0016;
+  camT.tx -= (dx * cp - dy * sp) * k;
+  camT.tz += (dx * -sp - dy * cp) * k;
+}
+
+cv.addEventListener('pointerup', function (e) {
+  delete ptrs[e.pointerId];
+  pinch = 0;
+  cv.classList.remove('drag');
+  if (!dragging) return;
+  dragging = false;
+  if (moved > 7 && !ptrs[Object.keys(ptrs)[0]]) {
+    spin.vaz = -lastD.x * 0.006 * 0.9;
+    spin.vpol = lastD.y * 0.004 * 0.9;
+  }
+  if (moved < 6) {
+    var h = hitTest(e.clientX, e.clientY);
+    if (h) {
+      if (h.type === 'unit') openUnit(h.id);
+      else openStory(h.id);
+    } else {
+      closePanel('unit-card');
+      closePanel('story-card');
+    }
+  }
+});
+cv.addEventListener('pointercancel', function (e) { delete ptrs[e.pointerId]; dragging = false; pinch = 0; cv.classList.remove('drag'); });
+cv.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+cv.addEventListener('wheel', function (e) {
+  e.preventDefault();
+  var f = Math.exp(e.deltaY * 0.0012);
+  camT.dist = clamp(camT.dist * f, 40, 470);
+  spin.vaz = 0; spin.vpol = 0;
+}, { passive: false });
+cv.addEventListener('dblclick', function (e) {
+  var h = hitTest(e.clientX, e.clientY);
+  if (h && h.type === 'unit') {
+    for (var i = 0; i < UNITS.length; i++) {
+      if (UNITS[i].id !== h.id) continue;
+      var pos = unitPos(UNITS[i], state.day);
+      flyTo(pos.lng, pos.lat, 68, 0.19);
+    }
+    return;
+  }
+  var g = groundAt(e.clientX, e.clientY);
+  if (g) {
+    camT.tx = g.x; camT.tz = g.z;
+    camT.dist = clamp(camT.dist, 60, 118);
+    camT.pol = 0.17;
+  }
+});
+
+/* ---------- 控件 ---------- */
+elScrub.addEventListener('input', function () { setDay(parseFloat(elScrub.value)); });
+$('btn-play').addEventListener('click', togglePlay);
+$('btn-next').addEventListener('click', function () { revealLayer(state.revealed + 1); });
+$('btn-src').addEventListener('click', showSources);
+$('btn-stories').addEventListener('click', showStoryIndex);
+$('modal-close').addEventListener('click', hideModal);
+$('modal').addEventListener('click', function (e) { if (e.target === $('modal')) hideModal(); });
+
+/* ---------- 沉浸控件 ---------- */
+var pgBtn = $('pg-enter');
+if (pgBtn) pgBtn.addEventListener('click', function () { Prologue.enter(false); });
+var sbBtn = $('btn-sound');
+if (sbBtn) sbBtn.addEventListener('click', function () {
+  AU.on = !AU.on;
+  this.textContent = AU.on ? '♪ 音场' : '♪ 静音';
+  this.classList.toggle('on', AU.on);
+  if (AU.ctx) { if (AU.on) AU.ctx.resume(); else AU.ctx.suspend(); }
+  else if (AU.on) auInit();
+});
+var cbBtn = $('btn-cinema');
+if (cbBtn) cbBtn.addEventListener('click', function () { toggleCinema(); });
+var mmBtn = $('mm-close');
+if (mmBtn) mmBtn.addEventListener('click', function () {
+  var el = $('memorial'); if (el) el.classList.remove('on');
+});
+
+var layerBtns = document.querySelectorAll('.layer');
+for (var lb = 0; lb < layerBtns.length; lb++) {
+  layerBtns[lb].addEventListener('click', function () {
+    var n = parseInt(this.getAttribute('data-layer'), 10);
+    if (n > state.revealed) { revealLayer(n); return; }
+    focusCamera(LAYERS[n - 1].cam);
+  });
+}
+var closeBtns = document.querySelectorAll('[data-close]');
+for (var cb = 0; cb < closeBtns.length; cb++) {
+  closeBtns[cb].addEventListener('click', function () { closePanel(this.getAttribute('data-close')); });
+}
+var spBtns = document.querySelectorAll('.tl-speed button');
+for (var sb = 0; sb < spBtns.length; sb++) {
+  spBtns[sb].addEventListener('click', function () {
+    state.speed = parseFloat(this.getAttribute('data-sp'));
+    for (var i = 0; i < spBtns.length; i++) spBtns[i].classList.toggle('on', spBtns[i] === this);
+  });
+}
+
+function buildStageJump() {
+  var host = $('tl-stagejump');
+  var labels = ['战 略 态 势', '碾 庄 圩', '双 堆 集', '陈 官 庄'];
+  var days = [0, 4, 19, 42];
+  var h = '';
+  for (var i = 0; i < 4; i++) h += '<button data-jump="' + days[i] + '" data-n="' + (i + 1) + '">' + labels[i] + '</button>';
+  host.innerHTML = h;
+  var bs = host.querySelectorAll('button');
+  for (var k = 0; k < bs.length; k++) {
+    bs[k].addEventListener('click', function () {
+      var d = parseFloat(this.getAttribute('data-jump'));
+      var n = parseInt(this.getAttribute('data-n'), 10);
+      if (n > state.revealed) revealLayer(n);
+      state.playing = false; syncPlayBtn();
+      setDay(d);
+      focusCamera(LAYERS[n - 1].cam);
+      for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i] === this);
+    });
+  }
+}
+
+var KEY_MARKS = { '战役发起': 1, '围黄百韬': 1, '碾庄大捷': 1, '围黄维': 1, '双堆集大捷': 1, '围杜聿明': 1, '全役结束': 1 };
+
+function buildTicks() {
+  var host = $('tl-marks');
+  var h = '';
+  for (var i = 0; i < EVENTS.length; i++) {
+    var e = EVENTS[i];
+    var pct = (e.d / (CAMPAIGN.days - 1)) * 100;
+    h += '<i style="left:' + pct.toFixed(2) + '%"></i>';
+    if (e.mark && KEY_MARKS[e.mark]) h += '<b style="left:' + pct.toFixed(2) + '%">' + e.mark + '</b>';
+  }
+  host.innerHTML = h;
+}
+
+document.addEventListener('keydown', function (e) {
+  if (!Prologue.done && (e.code === 'Space' || e.code === 'Enter' || e.key === 'Escape')) {
+    e.preventDefault(); Prologue.enter(false); return;
+  }
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  else if (e.code === 'ArrowRight') { setDay(state.day + 1); }
+  else if (e.code === 'ArrowLeft') { setDay(state.day - 1); }
+  else if (e.key === 'Escape') { hideModal(); closePanel('unit-card'); closePanel('story-card'); }
+  else if (e.key >= '1' && e.key <= '4') revealLayer(parseInt(e.key, 10));
+  else if (e.key === 'h' || e.key === 'H') toggleCinema();
+  else if (e.key === 'm' || e.key === 'M') { var sb = $('btn-sound'); if (sb) sb.click(); }
+  else if (e.key === 'v' || e.key === 'V') { camT.pol = 0.16; camT.dist = Math.min(camT.dist, 130); }
+});
+
+/* ---------- 主循环 ---------- */
+/* ---------- 地形图层缓存：相机不动时只做一次位图拷贝 ---------- */
+var terrCv = null, terrCtx = null;
+var cacheCam = { az: 1e9, pol: 0, dist: 0, tx: 0, tz: 0 };
+
+function camChanged() {
+  return Math.abs(cam.az - cacheCam.az) > 0.0004 ||
+    Math.abs(cam.pol - cacheCam.pol) > 0.0004 ||
+    Math.abs(cam.dist - cacheCam.dist) > 0.02 ||
+    Math.abs(cam.tx - cacheCam.tx) > 0.02 ||
+    Math.abs(cam.tz - cacheCam.tz) > 0.02;
+}
+
+function renderTerrainLayer() {
+  if (!terrCv || terrCv.width !== cv.width || terrCv.height !== cv.height) {
+    terrCv = document.createElement('canvas');
+    terrCv.width = cv.width;
+    terrCv.height = cv.height;
+    terrCtx = terrCv.getContext('2d');
+  }
+  var main = ctx;
+  ctx = terrCtx;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.clearRect(0, 0, VW, VH);
+  projectGrid();
+  drawFrame('far');
+  drawTerrain();
+  drawContours();
+  drawEngraving();
+  drawRivers();
+  drawRails();
+  drawRoads();
+  drawFrame('near');
+  ctx = main;
+  cacheCam.az = cam.az; cacheCam.pol = cam.pol; cacheCam.dist = cam.dist;
+  cacheCam.tx = cam.tx; cacheCam.tz = cam.tz;
+}
+
+
+
+function frame(t) {
+  now = t || 0;
+  if (!lastT) lastT = now;
+  dt = Math.min(0.05, (now - lastT) / 1000);
+  lastT = now;
+
+  if (state.playing) {
+    var nd = state.day + dt * 0.78 * state.speed;
+    if (nd >= CAMPAIGN.days - 1) { nd = CAMPAIGN.days - 1; state.playing = false; syncPlayBtn(); }
+    setDay(nd, true);
+  }
+
+  /* 松手后的镜头惯性 */
+  if (!dragging && (spin.vaz || spin.vpol)) {
+    camT.az += spin.vaz * dt * 34;
+    camT.pol = clamp(camT.pol + spin.vpol * dt * 26, 0.12, 1.34);
+    var damp = Math.exp(-dt * 4.4);
+    spin.vaz *= damp; spin.vpol *= damp;
+    if (Math.abs(spin.vaz) < 0.0003) spin.vaz = 0;
+    if (Math.abs(spin.vpol) < 0.0003) spin.vpol = 0;
+  }
+
+  updateCamera(1 - Math.exp(-dt * 6));
+
+  if (camChanged()) renderTerrainLayer();
+  drawBackdrop();
+  drawSky(now);
+  if (terrCv) ctx.drawImage(terrCv, 0, 0, VW, VH);
+  drawHaze();
+  drawRings();
+  drawArrows();
+  drawPlaces();
+  drawUnits();
+  drawBarrage(now);
+  drawStories(now);
+  drawSnow(now, dt);
+  drawCompass();
+
+  Narr.tick(dt);
+  auTick(now, dt);
+  checkEnding();
+
+  if (state.intro > 0) {
+    state.intro = Math.max(0, state.intro - dt * 0.6);
+    ctx.fillStyle = 'rgba(10,7,4,' + (state.intro * 0.9) + ')';
+    ctx.fillRect(0, 0, VW, VH);
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- 启动 ---------- */
+function boot() {
+  if (location.search.indexOf('nofx') >= 0) document.body.classList.add('nofx');
+  resize();
+  buildTerrain();
+  buildStageJump();
+  buildTicks();
+  initGrain();
+  focusCamera(LAYERS[0].cam);
+  cam.dist = 620; cam.pol = 1.18;
+  setDay(0);
+  updateUI();
+  syncPlayBtn();
+  elScrub.value = 0;
+  snowInit();
+  parseHash();
+  if (location.hash) Prologue.enter(true);
+  setTimeout(function () { $('hint').classList.add('off'); }, 10000);
+  requestAnimationFrame(frame);
+}
+
+function parseHash() {
+  var h = location.hash.replace(/^#/, '');
+  if (!h) return;
+  var parts = h.split('&'), o = {};
+  for (var i = 0; i < parts.length; i++) {
+    var kv = parts[i].split('=');
+    if (kv.length === 2) o[kv[0]] = decodeURIComponent(kv[1]);
+  }
+  if (o.l) state.revealed = clamp(parseInt(o.l, 10) || 1, 1, 4);
+  if (o.d) state.day = clamp(parseFloat(o.d) || 0, 0, CAMPAIGN.days - 1);
+  elScrub.value = state.day;
+  Ending.prev = state.day;
+  updateUI();
+  focusCamera(LAYERS[state.revealed - 1].cam);
+  cam.az = camT.az; cam.pol = camT.pol; cam.dist = camT.dist; cam.tx = camT.tx; cam.tz = camT.tz;
+  if (o.u) openUnit(o.u);
+  if (o.s) openStory(o.s);
+}
+
+window.addEventListener('resize', function () { resize(); });
+
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  VW = window.innerWidth;
+  VH = window.innerHeight;
+  cv.width = Math.round(VW * DPR);
+  cv.height = Math.round(VH * DPR);
+  cv.style.width = VW + 'px';
+  cv.style.height = VH + 'px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  FOCAL = (VH * 0.5) / Math.tan(FOV * 0.5);
+  bgCv = null;
+  terrCv = null;
+  cacheCam.az = 1e9;
+  if (typeof snowInit === 'function' && VW > 0) snowInit();
+}
+
+boot();
+
+</script>
+</body>
+</html>
